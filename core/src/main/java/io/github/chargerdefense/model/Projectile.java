@@ -71,6 +71,7 @@ public class Projectile {
      * @return true if the projectile is within hit radius of the target
      */
     private boolean checkHit() {
+        return false;
     }
 
     /**

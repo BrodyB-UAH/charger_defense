@@ -164,6 +164,7 @@ public class MainMenuModel {
      * @return true if the profile was created successfully, false otherwise
      */
     public boolean createNewProfile(String username) {
+        return false;
     }
 
     /**
@@ -174,6 +175,7 @@ public class MainMenuModel {
      * @return true if the profile was deleted successfully, false otherwise
      */
     public boolean deleteProfile(String username) {
+        return false;
     }
 
     /**
@@ -183,6 +185,7 @@ public class MainMenuModel {
      * @return true if the profile was saved successfully, false otherwise
      */
     public boolean saveCurrentProfile() {
+        return false;
     }
 
     /**
@@ -193,6 +196,7 @@ public class MainMenuModel {
      * @return true if the high score was updated (new record), false otherwise
      */
     public boolean updateHighScore(String mapName, int score) {
+        return false;
     }
 
     /**

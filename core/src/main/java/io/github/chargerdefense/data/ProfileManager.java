@@ -63,6 +63,7 @@ public class ProfileManager {
 	 * @return The loaded UserProfile, or null if loading failed
 	 */
 	public UserProfile loadProfile(String username) {
+            return null;
 	}
 
 	/**
@@ -73,6 +74,7 @@ public class ProfileManager {
 	 * @return The created UserProfile
 	 */
 	public UserProfile createProfile(String username) {
+            return null;
 	}
 
 	/**

@@ -132,6 +132,7 @@ public class UserProfile {
 	 * @return true if the high score was updated, false otherwise
 	 */
 	public boolean updateHighScore(String mapName, int score) {
+            return false;
 	}
 
 	/**
@@ -165,5 +166,6 @@ public class UserProfile {
 	 * @return true if any map has save data, false otherwise
 	 */
 	public boolean hasAnySaveData() {
+            return false;
 	}
 }
