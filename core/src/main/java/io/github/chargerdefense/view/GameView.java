@@ -4,10 +4,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import io.github.chargerdefense.GameConstants;
 import io.github.chargerdefense.controller.GameController;
 import io.github.chargerdefense.controller.StateManager;
 import io.github.chargerdefense.model.GameModel;
+import io.github.chargerdefense.model.Projectile;
+import io.github.chargerdefense.model.enemy.Enemy;
+import io.github.chargerdefense.model.unit.Unit;
+
+import java.util.List;
 
 /**
  * The main gameplay screen that renders the game world and handles the game
@@ -19,6 +26,8 @@ public class GameView implements Screen {
     private final GameModel game;
     /** The sprite batch for efficiently rendering 2D graphics */
     private final SpriteBatch batch;
+    /** The shape renderer for drawing lines and geometric shapes */
+    private final ShapeRenderer shapeRenderer;
     /** The controller for processing user input during gameplay */
     private final GameController controller;
 
@@ -31,6 +40,7 @@ public class GameView implements Screen {
     public GameView(StateManager gameManager, GameModel game) {
         this.game = game;
         this.batch = new SpriteBatch();
+        this.shapeRenderer = new ShapeRenderer();
         this.controller = gameManager.getGameController();
     }
 
@@ -56,8 +66,34 @@ public class GameView implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        int screenWidth = Gdx.graphics.getWidth();
+        int screenHeight = Gdx.graphics.getHeight();
+        float scaleX = (float) screenWidth / GameConstants.GAME_WIDTH;
+        float scaleY = (float) screenHeight / GameConstants.GAME_HEIGHT;
+
+        game.getMap().renderPath(shapeRenderer);
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        List<Unit> units = game.getMap().getPlacedUnits();
+        for (Unit unit : units) {
+            unit.render(shapeRenderer, scaleX, scaleY);
+        }
+
+        List<Enemy> enemies = game.getRoundManager().getActiveEnemies();
+        for (Enemy enemy : enemies) {
+            enemy.render(shapeRenderer, scaleX, scaleY);
+        }
+
+        List<Projectile> projectiles = game.getActiveProjectiles();
+        for (Projectile projectile : projectiles) {
+            projectile.render(shapeRenderer, scaleX, scaleY);
+        }
+
+        shapeRenderer.end();
+
         batch.begin();
-        // TODO render game elements
+        // TODO render sprites/textures here if needed
         batch.end();
     }
 
@@ -98,5 +134,6 @@ public class GameView implements Screen {
     @Override
     public void dispose() {
         batch.dispose();
+        shapeRenderer.dispose();
     }
 }

@@ -5,9 +5,12 @@ import com.badlogic.gdx.Game;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.MainMenuModel;
 import io.github.chargerdefense.model.Round;
+import io.github.chargerdefense.model.enemy.NormalEnemy;
 import io.github.chargerdefense.model.map.GameMap;
 import io.github.chargerdefense.view.GameView;
 import io.github.chargerdefense.view.MainMenuView;
+import io.github.chargerdefense.view.MapSelectionView;
+import io.github.chargerdefense.view.ProfileSelectionView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,16 +42,26 @@ public class StateManager {
         this.mainMenuController = new MainMenuController(this, mainMenuModel);
     }
 
+    public List<Round> generateRounds() {
+        return new ArrayList<>(
+                List.of(
+                        new Round(List.of(
+                                new NormalEnemy(), new NormalEnemy(), new NormalEnemy())),
+                        new Round(List.of(
+                                new NormalEnemy(), new NormalEnemy(), new NormalEnemy(), new NormalEnemy(),
+                                new NormalEnemy(), new NormalEnemy())))
+
+        );
+    }
+
     /**
      * Starts the game and transitions to the game MVC.
      * 
      * @param map The game map to use for this game instance.
      */
     public void startGame(GameMap map) {
-        // TODO define rounds somewhere else
-        List<Round> rounds = new ArrayList<>();
         GameModel gameModel = new GameModel(10, 100, map,
-                rounds);
+                generateRounds());
 
         this.gameController = new GameController(this, gameModel);
 
@@ -61,6 +74,23 @@ public class StateManager {
      */
     public void showMainMenu() {
         game.setScreen(new MainMenuView(this));
+    }
+
+    /**
+     * Transitions to the profile selection screen.
+     * Creates and sets the profile selection view as the active screen.
+     */
+    public void showProfileSelection() {
+        mainMenuModel.checkForProfiles();
+        game.setScreen(new ProfileSelectionView(this));
+    }
+
+    /**
+     * Transitions to the map selection screen.
+     * Creates and sets the map selection view as the active screen.
+     */
+    public void showMapSelection() {
+        game.setScreen(new MapSelectionView(this));
     }
 
     /**
