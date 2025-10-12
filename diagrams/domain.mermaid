@@ -1,0 +1,147 @@
+classDiagram
+    %% ===== CORE DOMAIN ENTITIES =====
+    
+    class GameModel {
+        -Player player
+        -GameMap map  
+        -RoundManager roundManager
+        -int lives
+        -boolean isGameOver
+        -List~Projectile~ activeProjectiles
+        +update(deltaTime)
+        +purchaseUnit(unit, x, y) boolean
+        +onEnemyDefeated(enemy)
+        +enemyReachedEnd(enemy)
+        +awardCurrency(amount)
+        +awardScore(points)
+    }
+
+    class Player {
+        -int currency
+        -int score
+        -int enemiesDefeated
+        -int unitsPurchased
+        +canAfford(cost) boolean
+        +spendCurrency(amount)
+        +addCurrency(amount)
+        +addScore(points)
+        +incrementEnemiesDefeated()
+        +incrementUnitsPurchased()
+    }
+
+    class GameMap {
+        -Path path
+        -List~Unit~ placedUnits
+        +placeUnit(unit, x, y) boolean
+        +update(deltaTime, enemies) List~Projectile~
+        +getPath() Path
+    }
+
+    class Path {
+        -List~Point~ waypoints
+        +getWaypoint(index) Point
+        +getLength() int
+    }
+
+    class Unit {
+        -double damage
+        -double range
+        -double fireRate
+        -int cost
+        -Point position
+        -double cooldown
+        -Enemy currentTarget
+        +update(deltaTime, enemies) Projectile
+        +setPosition(position)
+        +getPosition() Point
+        +getCost() int
+    }
+
+    class ExampleUnit {
+        +ExampleUnit()
+    }
+
+    class Enemy {
+        -double initialHealth
+        -double health
+        -double speed
+        -int currencyValue
+        -Point position
+        -int pathIndex
+        -boolean isDead
+        -GameModel gameModel
+        +move(deltaTime, path)
+        +takeDamage(damage)
+        +reset()
+        +isDead() boolean
+        +getCurrencyValue() int
+        +getPosition() Point
+    }
+
+    class ExampleEnemy {
+        +ExampleEnemy(gameModel)
+    }
+
+    class Projectile {
+        -Unit origin
+        -Enemy target
+        -double damage
+        -Point.Double position
+        -Point.Double targetPosition
+        -double speed
+        -boolean isDestroyed
+        -Point.Double velocity
+        +update(deltaTime) boolean
+        +getPosition() Point.Double
+        +isDestroyed() boolean
+    }
+
+    class RoundManager {
+        -List~Round~ allRounds
+        -int currentRoundIndex
+        -Round currentRound
+        -GameModel game
+        +startNextRound() boolean
+        +update(deltaTime)
+        +getActiveEnemies() List~Enemy~
+        +areAllRoundsCompleted() boolean
+        +onEnemyDefeated(enemy)
+        +onEnemyReachedEnd(enemy)
+    }
+
+    class Round {
+        -List~Enemy~ enemiesToSpawn
+        -List~Enemy~ activeEnemies
+        -int enemiesDefeated
+        -int enemiesEscaped
+        -double spawnTimer
+        -int spawnIndex
+        -GameModel game
+        +start(game)
+        +update(deltaTime)
+        +isComplete() boolean
+        +getActiveEnemies() List~Enemy~
+        +onEnemyDefeated(enemy)
+        +onEnemyReachedEnd(enemy)
+    }
+
+    %% ===== INHERITANCE =====
+    Unit <|-- ExampleUnit
+    Enemy <|-- ExampleEnemy
+
+    %% ===== COMPOSITION & AGGREGATION =====
+    GameModel *-- Player : contains
+    GameModel *-- GameMap : contains
+    GameModel *-- RoundManager : contains
+    GameModel *-- "0..*" Projectile : manages
+
+    GameMap *-- Path : contains  
+    GameMap *-- "0..*" Unit : contains
+
+    RoundManager *-- "1..*" Round : manages
+    Round *-- "0..*" Enemy : spawns
+
+    Unit --> "0..1" Enemy : targets
+    Projectile --> Unit : origin
+    Projectile --> Enemy : target
+    Enemy --> GameModel : notifies

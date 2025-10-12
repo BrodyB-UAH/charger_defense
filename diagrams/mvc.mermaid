@@ -1,0 +1,85 @@
+classDiagram
+    %% ===== MVC LAYERS =====
+    
+    %% MODEL LAYER (Domain + Business Logic)
+    class GameModel {
+        -Player player
+        -GameMap map
+        -RoundManager roundManager
+        -int lives
+        -boolean isGameOver
+        -List~Projectile~ activeProjectiles
+        +update(deltaTime)
+        +purchaseUnit(unit, x, y)
+        +onEnemyDefeated(enemy)
+        +enemyReachedEnd(enemy)
+        +startNextRound()
+        +isGameOver() boolean
+        +getActiveProjectiles()
+    }
+
+    class MainMenuModel {
+        -String activeProfileName
+        -boolean isLoading
+        -UserProfile currentProfile
+        +setActiveProfile(name)
+        +getCurrentProfile()
+        +notifyObservers()
+    }
+
+    %% VIEW LAYER
+    class GameView {
+        -GameModel game
+        -SpriteBatch batch
+        -GameController controller
+        +show()
+        +render(delta)
+        +dispose()
+    }
+
+    class MainMenuView {
+        -MainMenuController controller
+        -MainMenuModel model
+        +show()
+        +render(delta)
+        +dispose()
+    }
+
+    %% CONTROLLER LAYER
+    class GameController {
+        -StateManager stateManager
+        -GameModel game
+        +keyDown(keycode)
+        +touchDown(x, y, pointer, button)
+        +purchaseUnit(unit, x, y)
+        +startNextRound()
+    }
+
+    class MainMenuController {
+        -StateManager stateManager
+        -MainMenuModel model
+        +onPlayClicked()
+        +onProfileSelected(name)
+        +onCreateProfile(name)
+    }
+
+    class StateManager {
+        -Game game
+        -MainMenuModel mainMenuModel
+        -MainMenuController mainMenuController
+        -GameController gameController
+        +startGame(map)
+        +showMainMenu()
+    }
+
+    %% ===== RELATIONSHIPS =====
+    GameModel --> GameView : notifies
+    GameView --> GameController : uses
+    MainMenuModel --> MainMenuView : notifies
+    MainMenuView --> MainMenuController : uses
+    
+    GameController --> GameModel : controls
+    MainMenuController --> MainMenuModel : controls
+    StateManager --> MainMenuController : manages
+    StateManager --> GameController : manages
+    
