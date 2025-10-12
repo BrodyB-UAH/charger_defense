@@ -1,5 +1,8 @@
 package io.github.chargerdefense.model.unit;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
 import io.github.chargerdefense.model.Projectile;
 import io.github.chargerdefense.model.enemy.Enemy;
 
@@ -51,6 +54,21 @@ public abstract class Unit {
      * @return A new projectile if the unit fired, null otherwise
      */
     public Projectile update(float deltaTime, List<Enemy> enemies) {
+        if (cooldown > 0) {
+            cooldown -= deltaTime;
+        }
+
+        if (currentTarget == null || currentTarget.isDead()
+                || !canSeeEnemy(currentTarget, position.distanceSq(currentTarget.getPosition()))) {
+            findNewTarget(enemies);
+        }
+
+        if (currentTarget != null && cooldown <= 0) {
+            Projectile projectile = fire();
+            cooldown = 1.0 / fireRate;
+            return projectile;
+        }
+
         return null;
     }
 
@@ -60,6 +78,17 @@ public abstract class Unit {
      * @param enemies The list of potential targets.
      */
     private void findNewTarget(List<Enemy> enemies) {
+        currentTarget = null;
+        double closestDistanceSq = Double.MAX_VALUE;
+        for (Enemy enemy : enemies) {
+            double distanceSq = position.distanceSq(enemy.getPosition());
+            if (distanceSq < closestDistanceSq) {
+                if (canSeeEnemy(enemy, distanceSq)) {
+                    closestDistanceSq = distanceSq;
+                    currentTarget = enemy;
+                }
+            }
+        }
     }
 
     /**
@@ -76,13 +105,25 @@ public abstract class Unit {
     }
 
     /**
-     * Checks if an enemy is within the unit's attack range.
+     * Checks if the enemy is within range
      *
-     * @param enemy The enemy to check
+     * @param enemy      The enemy to check
+     * @param distanceSq The squared distance to the enemy
      * @return true if the enemy is within range, false otherwise
      */
-    private boolean isEnemyInRange(Enemy enemy) {
-        return position.distance(enemy.getPosition()) <= range;
+    private boolean isInRange(Enemy enemy, double distanceSq) {
+        return distanceSq <= Math.pow(range, 2);
+    }
+
+    /**
+     * Checks if the unit can see an enemy
+     *
+     * @param enemy      The enemy to check
+     * @param distanceSq The squared distance to the enemy
+     * @return true if the enemy is within range, false otherwise
+     */
+    private boolean canSeeEnemy(Enemy enemy, double distanceSq) {
+        return isInRange(enemy, distanceSq) && !enemy.isCamouflaged();
     }
 
     /**
@@ -110,5 +151,36 @@ public abstract class Unit {
      */
     public int getCost() {
         return cost;
+    }
+
+    /**
+     * Renders the unit as a colored square with a range circle.
+     *
+     * @param shapeRenderer The shape renderer to use for drawing
+     * @param scaleX        The horizontal scale factor (screen width / game width)
+     * @param scaleY        The vertical scale factor (screen height / game height)
+     */
+    public void render(ShapeRenderer shapeRenderer, float scaleX, float scaleY) {
+        if (position == null) {
+            return;
+        }
+
+        float screenX = position.x * scaleX;
+        float screenY = position.y * scaleY;
+        float size = 16.0f;
+
+        // draw the range indicator
+        shapeRenderer.setColor(0.5f, 0.5f, 1.0f, 0.2f);
+        shapeRenderer.circle(screenX, screenY, (float) range * scaleX);
+
+        shapeRenderer.setColor(Color.BLUE);
+        shapeRenderer.rect(screenX - size / 2, screenY - size / 2, size, size);
+
+        // targeting line
+        if (currentTarget != null && !currentTarget.isDead()) {
+            Point targetPos = currentTarget.getPosition();
+            shapeRenderer.setColor(Color.RED);
+            shapeRenderer.line(screenX, screenY, targetPos.x * scaleX, targetPos.y * scaleY);
+        }
     }
 }

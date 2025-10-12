@@ -76,10 +76,25 @@ public class MainMenuView implements Screen, MainMenuObserver {
         playButton.setDisabled(true);
         table.add(playButton).fillX().uniformX().padBottom(10).row();
 
+        TextButton profileButton = new TextButton("Profile Selection", skin);
+        table.add(profileButton).fillX().uniformX().padBottom(10).row();
 
         TextButton quitButton = new TextButton("Quit to Desktop", skin);
         table.add(quitButton).fillX().uniformX().row();
 
+        playButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                controller.onPlayClicked();
+            }
+        });
+
+        profileButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                controller.onProfileSelectionClicked();
+            }
+        });
 
         quitButton.addListener(new ChangeListener() {
             @Override
@@ -147,23 +162,13 @@ public class MainMenuView implements Screen, MainMenuObserver {
         skin.dispose();
     }
 
-    /**
-     * Called when profiles have been loaded from storage.
-     *
-     * @param profiles The list of available profile names
-     */
     @Override
     public void onProfilesLoaded(List<String> profiles) {
+        if (!profiles.isEmpty()) {
+            controller.onProfileSelected(profiles.get(0));
+        }
     }
 
-    /**
-     * Called when the active profile changes.
-     * Updates the profile label text and enables/disables the play button
-     * accordingly.
-     *
-     * @param activeProfile The name of the newly active profile, or null if none
-     *                      selected
-     */
     @Override
     public void onActiveProfileChanged(String activeProfile) {
         if (activeProfile != null) {
@@ -175,12 +180,6 @@ public class MainMenuView implements Screen, MainMenuObserver {
         }
     }
 
-    /**
-     * Called when the loading state changes.
-     * Displays a loading message while profiles are being loaded.
-     *
-     * @param isLoading true if profiles are currently being loaded, false otherwise
-     */
     @Override
     public void onLoadingStateChanged(boolean isLoading) {
     }

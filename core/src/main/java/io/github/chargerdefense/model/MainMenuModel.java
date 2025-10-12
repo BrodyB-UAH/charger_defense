@@ -66,6 +66,10 @@ public class MainMenuModel {
     public void setActiveProfile(String profileName) {
         this.activeProfile = profileName;
 
+        this.currentUserProfile = profileManager.loadProfile(profileName);
+        if (this.currentUserProfile == null) {
+            Gdx.app.error("MainMenuModel", "Failed to load profile data for: " + profileName);
+        }
 
         notifyActiveProfileChanged();
     }
@@ -114,7 +118,20 @@ public class MainMenuModel {
         setLoading(true);
 
         new Thread(() -> {
-
+            try {
+                List<String> loadedProfiles = profileManager.getAllProfileNames();
+                Gdx.app.postRunnable(() -> {
+                    this.existingProfiles = loadedProfiles;
+                    setLoading(false);
+                    notifyProfilesLoaded();
+                });
+            } catch (Exception e) {
+                Gdx.app.error("MainMenuModel", "Unexpected error while loading profiles", e);
+                Gdx.app.postRunnable(() -> {
+                    setLoading(false);
+                    notifyProfilesLoaded();
+                });
+            }
         }).start();
     }
 
@@ -164,7 +181,33 @@ public class MainMenuModel {
      * @return true if the profile was created successfully, false otherwise
      */
     public boolean createNewProfile(String username) {
-        return false;
+        if (username == null || username.trim().isEmpty()) {
+            Gdx.app.error("MainMenuModel", "Cannot create profile with empty username");
+            return false;
+        }
+
+        String trimmedUsername = username.trim();
+
+        if (profileManager.profileExists(trimmedUsername)) {
+            Gdx.app.error("MainMenuModel", "Profile already exists: " + trimmedUsername);
+            return false;
+        }
+
+        UserProfile newProfile = profileManager.createProfile(trimmedUsername);
+        if (newProfile != null) {
+            if (!existingProfiles.contains(trimmedUsername)) {
+                existingProfiles.add(trimmedUsername);
+                notifyProfilesLoaded();
+            }
+
+            setActiveProfile(trimmedUsername);
+
+            Gdx.app.log("MainMenuModel", "Successfully created new profile: " + trimmedUsername);
+            return true;
+        } else {
+            Gdx.app.error("MainMenuModel", "Failed to create profile: " + trimmedUsername);
+            return false;
+        }
     }
 
     /**
@@ -175,7 +218,29 @@ public class MainMenuModel {
      * @return true if the profile was deleted successfully, false otherwise
      */
     public boolean deleteProfile(String username) {
-        return false;
+        if (username == null || username.trim().isEmpty()) {
+            Gdx.app.error("MainMenuModel", "Cannot delete profile with empty username");
+            return false;
+        }
+
+        String trimmedUsername = username.trim();
+        boolean deleted = profileManager.deleteProfile(trimmedUsername);
+
+        if (deleted) {
+            existingProfiles.remove(trimmedUsername);
+
+            if (trimmedUsername.equals(activeProfile)) {
+                setActiveProfile(null);
+            }
+
+            notifyProfilesLoaded();
+
+            Gdx.app.log("MainMenuModel", "Successfully deleted profile: " + trimmedUsername);
+        } else {
+            Gdx.app.error("MainMenuModel", "Failed to delete profile: " + trimmedUsername);
+        }
+
+        return deleted;
     }
 
     /**
@@ -185,7 +250,19 @@ public class MainMenuModel {
      * @return true if the profile was saved successfully, false otherwise
      */
     public boolean saveCurrentProfile() {
-        return false;
+        if (currentUserProfile == null) {
+            Gdx.app.error("MainMenuModel", "No current profile to save");
+            return false;
+        }
+
+        boolean saved = profileManager.saveProfile(currentUserProfile);
+        if (saved) {
+            Gdx.app.log("MainMenuModel", "Successfully saved current profile: " + currentUserProfile.getUsername());
+        } else {
+            Gdx.app.error("MainMenuModel", "Failed to save current profile: " + currentUserProfile.getUsername());
+        }
+
+        return saved;
     }
 
     /**
@@ -196,7 +273,18 @@ public class MainMenuModel {
      * @return true if the high score was updated (new record), false otherwise
      */
     public boolean updateHighScore(String mapName, int score) {
-        return false;
+        if (currentUserProfile == null) {
+            Gdx.app.error("MainMenuModel", "No active profile to update high score");
+            return false;
+        }
+
+        boolean updated = currentUserProfile.updateHighScore(mapName, score);
+        if (updated) {
+            saveCurrentProfile();
+            Gdx.app.log("MainMenuModel", "New high score for " + mapName + ": " + score);
+        }
+
+        return updated;
     }
 
     /**
@@ -206,5 +294,13 @@ public class MainMenuModel {
      * @param saveData The save data as a JSON string
      */
     public void saveGameData(String mapName, String saveData) {
+        if (currentUserProfile == null) {
+            Gdx.app.error("MainMenuModel", "No active profile to save game data");
+            return;
+        }
+
+        currentUserProfile.saveGameData(mapName, saveData);
+        saveCurrentProfile();
+        Gdx.app.log("MainMenuModel", "Saved game data for map: " + mapName);
     }
 }

@@ -38,15 +38,15 @@ public class Round {
     /**
      * Prepares the round to begin.
      * 
-     * @param game The main game object for callbacks.
+     * @param gameModel The main game object for callbacks.
      */
-    public void start(GameModel game) {
-        this.game = game;
+    public void start(GameModel gameModel) {
+        this.game = gameModel;
         this.spawnIndex = 0;
         this.enemiesDefeated = 0;
         this.enemiesEscaped = 0;
         for (Enemy enemy : enemiesToSpawn) {
-            enemy.reset();
+            enemy.reset(gameModel);
         }
     }
 
@@ -56,6 +56,19 @@ public class Round {
      * @param deltaTime The time elapsed since the last update (in seconds)
      */
     public void update(float deltaTime) {
+        // for now, spawn one enemy per 0.5s
+        spawnTimer += deltaTime;
+        if (spawnTimer >= 0.5 && spawnIndex < enemiesToSpawn.size()) {
+            Enemy enemy = enemiesToSpawn.get(spawnIndex++);
+            activeEnemies.add(enemy);
+            spawnTimer = 0;
+        }
+
+        activeEnemies.removeIf(Enemy::isDead);
+        Path path = game.getMap().getPath();
+        for (Enemy enemy : activeEnemies) {
+            enemy.move(deltaTime, path);
+        }
     }
 
     /**

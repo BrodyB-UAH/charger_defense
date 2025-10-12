@@ -1,5 +1,8 @@
 package io.github.chargerdefense.model.enemy;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.Path;
 
@@ -39,14 +42,12 @@ public abstract class Enemy {
      * @param health        The starting health of the enemy.
      * @param speed         The movement speed of the enemy (units per update).
      * @param currencyValue The currency awarded upon defeat.
-     * @param gameModel     The game model to notify of enemy events.
      */
-    public Enemy(double health, double speed, int currencyValue, GameModel gameModel) {
+    public Enemy(double health, double speed, int currencyValue) {
         this.initialHealth = health;
         this.health = health;
         this.speed = speed;
         this.currencyValue = currencyValue;
-        this.gameModel = gameModel;
         this.pathIndex = 0;
     }
 
@@ -57,6 +58,29 @@ public abstract class Enemy {
      * @param path      The path to follow.
      */
     public void move(float deltaTime, Path path) {
+        if (isDead)
+            return;
+
+        Point targetWaypoint = path.getWaypoint(pathIndex);
+
+        if (position == null) {
+            position = new Point(path.getWaypoint(0));
+        }
+
+        double dx = targetWaypoint.x - position.x;
+        double dy = targetWaypoint.y - position.y;
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < speed) {
+            position = targetWaypoint;
+            pathIndex += 1;
+            if (pathIndex >= path.getLength()) {
+                handleReachedEnd();
+            }
+        } else {
+            position.x += (dx / distance) * speed * deltaTime;
+            position.y += (dy / distance) * speed * deltaTime;
+        }
     }
 
     /**
@@ -97,11 +121,14 @@ public abstract class Enemy {
     /**
      * Resets the enemy's state for potential reuse in a new round.
      * Resets path index and death status.
+     * 
+     * @param gameModel The game model to notify of enemy events.
      */
-    public void reset() {
+    public void reset(GameModel gameModel) {
         this.pathIndex = 0;
         this.isDead = false;
         this.health = this.initialHealth;
+        this.gameModel = gameModel;
     }
 
     /**
@@ -129,5 +156,49 @@ public abstract class Enemy {
      */
     public Point getPosition() {
         return position;
+    }
+
+    /**
+     * Checks if the enemy is camouflaged.
+     *
+     * @return true if the enemy is camouflaged, false otherwise
+     */
+    public boolean isCamouflaged() {
+        return false;
+    }
+
+    /**
+     * Renders the enemy as a colored circle with a health bar.
+     *
+     * @param shapeRenderer The shape renderer to use for drawing
+     * @param scaleX        The horizontal scale factor (screen width / game width)
+     * @param scaleY        The vertical scale factor (screen height / game height)
+     */
+    public void render(ShapeRenderer shapeRenderer, float scaleX, float scaleY) {
+        if (position == null || isDead) {
+            return;
+        }
+
+        float screenX = position.x * scaleX;
+        float screenY = position.y * scaleY;
+        float radius = 8.0f;
+
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.circle(screenX, screenY, radius);
+
+        // health bar
+        float healthBarWidth = 20.0f;
+        float healthBarHeight = 3.0f;
+        float healthBarY = screenY + radius + 5.0f;
+        float healthPercentage = (float) (health / initialHealth);
+
+        // background
+        shapeRenderer.setColor(Color.DARK_GRAY);
+        shapeRenderer.rect(screenX - healthBarWidth / 2, healthBarY, healthBarWidth, healthBarHeight);
+
+        // foreground
+        shapeRenderer.setColor(Color.GREEN);
+        shapeRenderer.rect(screenX - healthBarWidth / 2, healthBarY, healthBarWidth * healthPercentage,
+                healthBarHeight);
     }
 }

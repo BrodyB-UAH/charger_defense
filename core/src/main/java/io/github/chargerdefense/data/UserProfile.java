@@ -132,7 +132,12 @@ public class UserProfile {
 	 * @return true if the high score was updated, false otherwise
 	 */
 	public boolean updateHighScore(String mapName, int score) {
-            return false;
+		MapState mapState = getMapState(mapName);
+		boolean updated = mapState.updateHighScore(score);
+		if (updated) {
+			mapState.setLastPlayedTimestamp(System.currentTimeMillis());
+		}
+		return updated;
 	}
 
 	/**
@@ -142,6 +147,9 @@ public class UserProfile {
 	 * @param saveData The save data as a JSON string
 	 */
 	public void saveGameData(String mapName, String saveData) {
+		MapState mapState = getMapState(mapName);
+		mapState.setLastSaveData(saveData);
+		mapState.setLastPlayedTimestamp(System.currentTimeMillis());
 	}
 
 	/**
@@ -150,6 +158,9 @@ public class UserProfile {
 	 * @param mapName The name of the map to mark as completed
 	 */
 	public void markMapCompleted(String mapName) {
+		MapState mapState = getMapState(mapName);
+		mapState.setCompleted(true);
+		mapState.setLastPlayedTimestamp(System.currentTimeMillis());
 	}
 
 	/**
@@ -166,6 +177,6 @@ public class UserProfile {
 	 * @return true if any map has save data, false otherwise
 	 */
 	public boolean hasAnySaveData() {
-            return false;
+		return mapStates.values().stream().anyMatch(MapState::hasSaveData);
 	}
 }

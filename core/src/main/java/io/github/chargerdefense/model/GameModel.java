@@ -54,6 +54,17 @@ public class GameModel {
 
         roundManager.update(deltaTime);
 
+        List<Projectile> newProjectiles = map.update(deltaTime, roundManager.getActiveEnemies());
+        activeProjectiles.addAll(newProjectiles);
+
+        Iterator<Projectile> iterator = activeProjectiles.iterator();
+        while (iterator.hasNext()) {
+            Projectile projectile = iterator.next();
+            if (projectile.update(deltaTime)) {
+                iterator.remove();
+            }
+        }
+
         checkGameOver();
     }
 
@@ -196,5 +207,14 @@ public class GameModel {
      */
     public List<Projectile> getActiveProjectiles() {
         return activeProjectiles;
+    }
+
+    /**
+     * Gets the round manager.
+     *
+     * @return The round manager
+     */
+    public RoundManager getRoundManager() {
+        return roundManager;
     }
 }

@@ -1,5 +1,8 @@
 package io.github.chargerdefense.model;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
 import io.github.chargerdefense.model.enemy.Enemy;
 import io.github.chargerdefense.model.unit.Unit;
 
@@ -26,7 +29,7 @@ public class Projectile {
     /**
      * The distance at which the projectile is considered to have hit the target.
      */
-    private static final double HIT_RADIUS = 5.0;
+    private double hitRadius = 5.0;
     /** Whether the projectile has hit its target or should be removed. */
     private boolean isDestroyed;
 
@@ -62,6 +65,33 @@ public class Projectile {
             return true;
         }
 
+        if (speed != 0) {
+            Point targetPos = target.getPosition();
+            Point.Double targetPosition = new Point.Double(targetPos.x, targetPos.y);
+
+            double dx = targetPosition.x - position.x;
+            double dy = targetPosition.y - position.y;
+            double distance = Math.sqrt(dx * dx + dy * dy);
+
+            Point.Double velocity;
+            if (distance > 0) {
+                velocity = new Point.Double(
+                        (dx / distance) * speed,
+                        (dy / distance) * speed);
+            } else {
+                velocity = new Point.Double(0, 0);
+            }
+
+            position.x += velocity.x * deltaTime;
+            position.y += velocity.y * deltaTime;
+        }
+
+        if (checkHit()) {
+            impact();
+            isDestroyed = true;
+            return true;
+        }
+
         return false;
     }
 
@@ -71,7 +101,15 @@ public class Projectile {
      * @return true if the projectile is within hit radius of the target
      */
     private boolean checkHit() {
-        return false;
+        if (target == null || target.isDead()) {
+            return false;
+        }
+
+        Point targetCurrentPos = target.getPosition();
+        double distanceToTarget = Math.pow(position.x - targetCurrentPos.x, 2) +
+                Math.pow(position.y - targetCurrentPos.y, 2);
+
+        return distanceToTarget <= Math.pow(hitRadius, 2);
     }
 
     /**
@@ -79,6 +117,9 @@ public class Projectile {
      * Called when a hit is detected.
      */
     private void impact() {
+        if (target != null && !target.isDead()) {
+            target.takeDamage(damage);
+        }
     }
 
     /**
@@ -136,11 +177,22 @@ public class Projectile {
     }
 
     /**
-     * Gets the hit radius used for collision detection.
+     * Renders the projectile as a small circle.
      *
-     * @return The hit radius in pixels
+     * @param shapeRenderer The shape renderer to use for drawing
+     * @param scaleX        The horizontal scale factor (screen width / game width)
+     * @param scaleY        The vertical scale factor (screen height / game height)
      */
-    public static double getHitRadius() {
-        return HIT_RADIUS;
+    public void render(ShapeRenderer shapeRenderer, float scaleX, float scaleY) {
+        if (isDestroyed) {
+            return;
+        }
+
+        float screenX = (float) position.x * scaleX;
+        float screenY = (float) position.y * scaleY;
+        float radius = 3.0f;
+
+        shapeRenderer.setColor(Color.YELLOW);
+        shapeRenderer.circle(screenX, screenY, radius);
     }
 }

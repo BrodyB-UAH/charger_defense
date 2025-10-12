@@ -53,7 +53,26 @@ public class ProfileManager {
 	 * @return true if the profile was saved successfully, false otherwise
 	 */
 	public boolean saveProfile(UserProfile profile) {
-		return false;
+		if (profile == null || profile.getUsername() == null || profile.getUsername().trim().isEmpty()) {
+			Gdx.app.error("ProfileManager", "Cannot save profile: invalid profile or username");
+			return false;
+		}
+
+		try {
+			String filename = profile.getUsername() + PROFILE_EXTENSION;
+			FileHandle profileFile = Gdx.files.local(PROFILES_DIRECTORY + filename);
+
+			profile.updateLastAccessed();
+
+			String jsonData = json.prettyPrint(profile);
+			profileFile.writeString(jsonData, false);
+
+			Gdx.app.log("ProfileManager", "Successfully saved profile: " + profile.getUsername());
+			return true;
+		} catch (Exception e) {
+			Gdx.app.error("ProfileManager", "Failed to save profile: " + profile.getUsername(), e);
+			return false;
+		}
 	}
 
 	/**
@@ -63,7 +82,33 @@ public class ProfileManager {
 	 * @return The loaded UserProfile, or null if loading failed
 	 */
 	public UserProfile loadProfile(String username) {
-            return null;
+		if (username == null || username.trim().isEmpty()) {
+			Gdx.app.error("ProfileManager", "Cannot load profile: invalid username");
+			return null;
+		}
+
+		try {
+			String filename = username + PROFILE_EXTENSION;
+			FileHandle profileFile = Gdx.files.local(PROFILES_DIRECTORY + filename);
+
+			if (!profileFile.exists()) {
+				Gdx.app.log("ProfileManager", "Profile file does not exist: " + filename);
+				return null;
+			}
+
+			String jsonData = profileFile.readString();
+			UserProfile profile = json.fromJson(UserProfile.class, jsonData);
+
+			if (profile != null) {
+				profile.updateLastAccessed();
+				Gdx.app.log("ProfileManager", "Successfully loaded profile: " + username);
+			}
+
+			return profile;
+		} catch (Exception e) {
+			Gdx.app.error("ProfileManager", "Failed to parse or load profile: " + username, e);
+			return null;
+		}
 	}
 
 	/**
@@ -74,7 +119,24 @@ public class ProfileManager {
 	 * @return The created UserProfile
 	 */
 	public UserProfile createProfile(String username) {
-            return null;
+		if (username == null || username.trim().isEmpty()) {
+			Gdx.app.error("ProfileManager", "Cannot create profile: invalid username");
+			return null;
+		}
+
+		if (profileExists(username)) {
+			Gdx.app.error("ProfileManager", "Profile already exists: " + username);
+			return null;
+		}
+
+		UserProfile profile = new UserProfile(username.trim());
+		if (saveProfile(profile)) {
+			Gdx.app.log("ProfileManager", "Successfully created new profile: " + username);
+			return profile;
+		} else {
+			Gdx.app.error("ProfileManager", "Failed to save new profile: " + username);
+			return null;
+		}
 	}
 
 	/**
@@ -84,7 +146,13 @@ public class ProfileManager {
 	 * @return true if the profile exists, false otherwise
 	 */
 	public boolean profileExists(String username) {
-		return false;
+		if (username == null || username.trim().isEmpty()) {
+			return false;
+		}
+
+		String filename = username + PROFILE_EXTENSION;
+		FileHandle profileFile = Gdx.files.local(PROFILES_DIRECTORY + filename);
+		return profileFile.exists();
 	}
 
 	/**
@@ -94,7 +162,31 @@ public class ProfileManager {
 	 * @return true if the profile was deleted successfully, false otherwise
 	 */
 	public boolean deleteProfile(String username) {
-		return false;
+		if (username == null || username.trim().isEmpty()) {
+			Gdx.app.error("ProfileManager", "Cannot delete profile: invalid username");
+			return false;
+		}
+
+		try {
+			String filename = username + PROFILE_EXTENSION;
+			FileHandle profileFile = Gdx.files.local(PROFILES_DIRECTORY + filename);
+
+			if (!profileFile.exists()) {
+				Gdx.app.log("ProfileManager", "Profile file does not exist, nothing to delete: " + filename);
+				return true;
+			}
+
+			boolean deleted = profileFile.delete();
+			if (deleted) {
+				Gdx.app.log("ProfileManager", "Successfully deleted profile: " + username);
+			} else {
+				Gdx.app.error("ProfileManager", "Failed to delete profile file: " + filename);
+			}
+			return deleted;
+		} catch (Exception e) {
+			Gdx.app.error("ProfileManager", "Exception while deleting profile: " + username, e);
+			return false;
+		}
 	}
 
 	/**
@@ -105,6 +197,26 @@ public class ProfileManager {
 	public List<String> getAllProfileNames() {
 		List<String> profileNames = new ArrayList<>();
 
+		try {
+			FileHandle profilesDir = Gdx.files.local(PROFILES_DIRECTORY);
+			if (!profilesDir.exists()) {
+				return profileNames;
+			}
+
+			FileHandle[] profileFiles = profilesDir.list(PROFILE_EXTENSION);
+			for (FileHandle file : profileFiles) {
+				try {
+					String filename = file.nameWithoutExtension();
+					profileNames.add(filename);
+				} catch (Exception e) {
+					Gdx.app.error("ProfileManager", "Error processing profile file: " + file.name(), e);
+				}
+			}
+
+			Gdx.app.log("ProfileManager", "Found " + profileNames.size() + " profile(s)");
+		} catch (Exception e) {
+			Gdx.app.error("ProfileManager", "Failed to list profile files", e);
+		}
 
 		return profileNames;
 	}
