@@ -12,6 +12,6 @@ public class NormalEnemy extends Enemy {
      * @param gameModel The game model to notify of enemy events
      */
     public NormalEnemy() {
-        super(100, 1, 10);
+        super(100, 10, 10);
     }
 }

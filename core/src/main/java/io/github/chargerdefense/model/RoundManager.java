@@ -105,4 +105,31 @@ public class RoundManager {
             currentRound.onEnemyReachedEnd(enemy);
         }
     }
+
+    /**
+     * Gets the current round number (1-indexed for display).
+     *
+     * @return The current round number, or 0 if no round has started
+     */
+    public int getCurrentRoundNumber() {
+        return currentRoundIndex + 1;
+    }
+
+    /**
+     * Gets the total number of rounds.
+     *
+     * @return The total number of rounds in the game
+     */
+    public int getTotalRounds() {
+        return allRounds.size();
+    }
+
+    /**
+     * Checks if a round is currently in progress.
+     *
+     * @return true if a round is active and not complete, false otherwise
+     */
+    public boolean isRoundInProgress() {
+        return currentRound != null && !currentRound.isComplete();
+    }
 }

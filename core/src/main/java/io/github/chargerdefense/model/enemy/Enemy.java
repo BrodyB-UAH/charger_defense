@@ -26,6 +26,10 @@ public abstract class Enemy {
     private int currencyValue;
     /** The current position of the enemy on the map. */
     private Point position;
+    /** The precise floating-point x position for accurate movement. */
+    private double preciseX;
+    /** The precise floating-point y position for accurate movement. */
+    private double preciseY;
     /**
      * The index of the current waypoint on the path that the enemy is moving
      * towards.
@@ -61,25 +65,49 @@ public abstract class Enemy {
         if (isDead)
             return;
 
-        Point targetWaypoint = path.getWaypoint(pathIndex);
-
+        // initialize to first waypoint
         if (position == null) {
-            position = new Point(path.getWaypoint(0));
+            Point firstWaypoint = path.getWaypoint(0);
+            preciseX = firstWaypoint.x;
+            preciseY = firstWaypoint.y;
+            position = new Point((int) preciseX, (int) preciseY);
+            pathIndex = 1; // start moving towards the second waypoint
+            return;
         }
 
-        double dx = targetWaypoint.x - position.x;
-        double dy = targetWaypoint.y - position.y;
-        double distance = Math.sqrt(dx * dx + dy * dy);
+        if (pathIndex >= path.getLength()) {
+            handleReachedEnd();
+            return;
+        }
 
-        if (distance < speed) {
-            position = targetWaypoint;
-            pathIndex += 1;
-            if (pathIndex >= path.getLength()) {
-                handleReachedEnd();
+        float remainingDistance = (float) (speed * deltaTime);
+
+        while (remainingDistance > 0 && pathIndex < path.getLength()) {
+            Point targetWaypoint = path.getWaypoint(pathIndex);
+
+            double dx = targetWaypoint.x - preciseX;
+            double dy = targetWaypoint.y - preciseY;
+            double distanceToWaypoint = Math.sqrt(dx * dx + dy * dy);
+
+            if (distanceToWaypoint <= remainingDistance) {
+                preciseX = targetWaypoint.x;
+                preciseY = targetWaypoint.y;
+                position = new Point((int) preciseX, (int) preciseY);
+                remainingDistance -= (float) distanceToWaypoint;
+                pathIndex += 1;
+
+                if (pathIndex >= path.getLength()) {
+                    handleReachedEnd();
+                    return;
+                }
+            } else {
+                double ratio = remainingDistance / distanceToWaypoint;
+                preciseX += dx * ratio;
+                preciseY += dy * ratio;
+                position.x = (int) preciseX;
+                position.y = (int) preciseY;
+                remainingDistance = 0;
             }
-        } else {
-            position.x += (dx / distance) * speed * deltaTime;
-            position.y += (dy / distance) * speed * deltaTime;
         }
     }
 
@@ -129,6 +157,9 @@ public abstract class Enemy {
         this.isDead = false;
         this.health = this.initialHealth;
         this.gameModel = gameModel;
+        this.position = null;
+        this.preciseX = 0;
+        this.preciseY = 0;
     }
 
     /**
@@ -171,34 +202,30 @@ public abstract class Enemy {
      * Renders the enemy as a colored circle with a health bar.
      *
      * @param shapeRenderer The shape renderer to use for drawing
-     * @param scaleX        The horizontal scale factor (screen width / game width)
-     * @param scaleY        The vertical scale factor (screen height / game height)
      */
-    public void render(ShapeRenderer shapeRenderer, float scaleX, float scaleY) {
+    public void render(ShapeRenderer shapeRenderer) {
         if (position == null || isDead) {
             return;
         }
 
-        float screenX = position.x * scaleX;
-        float screenY = position.y * scaleY;
         float radius = 8.0f;
 
         shapeRenderer.setColor(Color.RED);
-        shapeRenderer.circle(screenX, screenY, radius);
+        shapeRenderer.circle(position.x, position.y, radius);
 
         // health bar
         float healthBarWidth = 20.0f;
         float healthBarHeight = 3.0f;
-        float healthBarY = screenY + radius + 5.0f;
+        float healthBarY = position.y + radius + 5.0f;
         float healthPercentage = (float) (health / initialHealth);
 
         // background
         shapeRenderer.setColor(Color.DARK_GRAY);
-        shapeRenderer.rect(screenX - healthBarWidth / 2, healthBarY, healthBarWidth, healthBarHeight);
+        shapeRenderer.rect(position.x - healthBarWidth / 2, healthBarY, healthBarWidth, healthBarHeight);
 
         // foreground
         shapeRenderer.setColor(Color.GREEN);
-        shapeRenderer.rect(screenX - healthBarWidth / 2, healthBarY, healthBarWidth * healthPercentage,
+        shapeRenderer.rect(position.x - healthBarWidth / 2, healthBarY, healthBarWidth * healthPercentage,
                 healthBarHeight);
     }
 }

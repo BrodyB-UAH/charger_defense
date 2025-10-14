@@ -154,33 +154,38 @@ public abstract class Unit {
     }
 
     /**
+     * Gets the attack range of this unit.
+     *
+     * @return The range in pixels
+     */
+    public double getRange() {
+        return range;
+    }
+
+    /**
      * Renders the unit as a colored square with a range circle.
      *
      * @param shapeRenderer The shape renderer to use for drawing
-     * @param scaleX        The horizontal scale factor (screen width / game width)
-     * @param scaleY        The vertical scale factor (screen height / game height)
      */
-    public void render(ShapeRenderer shapeRenderer, float scaleX, float scaleY) {
+    public void render(ShapeRenderer shapeRenderer) {
         if (position == null) {
             return;
         }
 
-        float screenX = position.x * scaleX;
-        float screenY = position.y * scaleY;
         float size = 16.0f;
 
         // draw the range indicator
         shapeRenderer.setColor(0.5f, 0.5f, 1.0f, 0.2f);
-        shapeRenderer.circle(screenX, screenY, (float) range * scaleX);
+        shapeRenderer.circle(position.x, position.y, (float) range);
 
         shapeRenderer.setColor(Color.BLUE);
-        shapeRenderer.rect(screenX - size / 2, screenY - size / 2, size, size);
+        shapeRenderer.rect(position.x - size / 2, position.y - size / 2, size, size);
 
         // targeting line
         if (currentTarget != null && !currentTarget.isDead()) {
             Point targetPos = currentTarget.getPosition();
             shapeRenderer.setColor(Color.RED);
-            shapeRenderer.line(screenX, screenY, targetPos.x * scaleX, targetPos.y * scaleY);
+            shapeRenderer.line(position.x, position.y, targetPos.x, targetPos.y);
         }
     }
 }

@@ -4,6 +4,9 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.unit.Unit;
+import io.github.chargerdefense.model.unit.BasicUnit;
+
+import java.awt.Point;
 
 /**
  * Controller for the game view that handles user input and coordinates
@@ -14,6 +17,12 @@ public class GameController extends InputAdapter {
     private final StateManager stateManager;
     /** The main game model that the controller manipulates */
     private final GameModel game;
+    /** The currently selected unit type for placement, or null if none selected */
+    private String selectedUnitType;
+    /** The current mouse position in game coordinates */
+    private Point.Float mousePosition;
+    /** The unit being previewed for placement */
+    private Unit previewUnit;
 
     /**
      * Constructs a new GameController with the specified state manager and game
@@ -25,6 +34,7 @@ public class GameController extends InputAdapter {
     public GameController(StateManager stateManager, GameModel game) {
         this.stateManager = stateManager;
         this.game = game;
+        this.mousePosition = new Point.Float(0, 0);
     }
 
     /**
@@ -49,18 +59,37 @@ public class GameController extends InputAdapter {
 
     /**
      * Handles touch/mouse down events during gameplay.
-     * This method can be extended to handle unit placement and other interactions.
-     *
-     * @param screenX The x coordinate of the touch/click
-     * @param screenY The y coordinate of the touch/click
+     * 
+     * @param gameX   The x coordinate in game coordinates
+     * @param gameY   The y coordinate in game coordinates
      * @param pointer The pointer for the event
      * @param button  The button pressed
      * @return true if the input was handled, false otherwise
      */
     @Override
-    public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        // TODO handle touches
-        return true;
+    public boolean touchDown(int gameX, int gameY, int pointer, int button) {
+        if (button == 2) {
+            clearSelectedUnit();
+            return true;
+        }
+
+        if (selectedUnitType != null && previewUnit != null) {
+            if (purchaseUnit(previewUnit, gameX, gameY)) {
+                clearSelectedUnit();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseMoved(int gameX, int gameY) {
+        if (selectedUnitType != null) {
+            mousePosition.x = gameX;
+            mousePosition.y = gameY;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -82,6 +111,78 @@ public class GameController extends InputAdapter {
      */
     public void startNextRound() {
         game.startNextRound();
+    }
+
+    /**
+     * Returns to the main menu screen.
+     * Transitions the game state back to the main menu.
+     */
+    public void returnToMainMenu() {
+        stateManager.showMainMenu();
+    }
+
+    /**
+     * Selects a unit type for placement on the map.
+     * The selected unit will be placed when the player clicks on the map.
+     *
+     * @param unitType The name/type of the unit to place
+     */
+    public void selectUnitForPlacement(String unitType) {
+        Unit tempUnit = createUnitFromType(unitType);
+        if (tempUnit != null && game.getPlayer().canAfford(tempUnit.getCost())) {
+            this.selectedUnitType = unitType;
+            this.previewUnit = tempUnit;
+        }
+    }
+
+    /**
+     * Creates a unit instance from the unit type name.
+     *
+     * @param unitType The name/type of the unit
+     * @return A new unit instance, or null if the type is invalid
+     */
+    private Unit createUnitFromType(String unitType) {
+        switch (unitType) {
+            case "Basic Unit":
+                return new BasicUnit();
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Gets the currently selected unit type for placement.
+     *
+     * @return The selected unit type, or null if none is selected
+     */
+    public String getSelectedUnitType() {
+        return selectedUnitType;
+    }
+
+    /**
+     * Gets the current mouse position in game coordinates.
+     *
+     * @return The mouse position
+     */
+    public Point.Float getMousePosition() {
+        return mousePosition;
+    }
+
+    /**
+     * Gets the preview unit (for rendering).
+     *
+     * @return The unit being previewed, or null if none selected
+     */
+    public Unit getPreviewUnit() {
+        return previewUnit;
+    }
+
+    /**
+     * Clears the currently selected unit type.
+     */
+    public void clearSelectedUnit() {
+        this.selectedUnitType = null;
+        this.previewUnit = null;
     }
 
     /**

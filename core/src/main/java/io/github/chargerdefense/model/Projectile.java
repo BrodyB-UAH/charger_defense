@@ -180,19 +180,15 @@ public class Projectile {
      * Renders the projectile as a small circle.
      *
      * @param shapeRenderer The shape renderer to use for drawing
-     * @param scaleX        The horizontal scale factor (screen width / game width)
-     * @param scaleY        The vertical scale factor (screen height / game height)
      */
-    public void render(ShapeRenderer shapeRenderer, float scaleX, float scaleY) {
+    public void render(ShapeRenderer shapeRenderer) {
         if (isDestroyed) {
             return;
         }
 
-        float screenX = (float) position.x * scaleX;
-        float screenY = (float) position.y * scaleY;
         float radius = 3.0f;
 
         shapeRenderer.setColor(Color.YELLOW);
-        shapeRenderer.circle(screenX, screenY, radius);
+        shapeRenderer.circle((float) position.x, (float) position.y, radius);
     }
 }

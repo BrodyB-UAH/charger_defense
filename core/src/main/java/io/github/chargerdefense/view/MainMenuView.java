@@ -73,8 +73,9 @@ public class MainMenuView implements Screen, MainMenuObserver {
         table.add(profileLabel).padBottom(20).row();
 
         playButton = new TextButton("Play", skin);
-        playButton.setDisabled(true);
         table.add(playButton).fillX().uniformX().padBottom(10).row();
+
+        onActiveProfileChanged(model.getActiveProfile());
 
         TextButton profileButton = new TextButton("Profile Selection", skin);
         table.add(profileButton).fillX().uniformX().padBottom(10).row();

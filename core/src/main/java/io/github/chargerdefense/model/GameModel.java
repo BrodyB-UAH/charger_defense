@@ -24,6 +24,8 @@ public class GameModel {
     private boolean isGameOver;
     /** A list of all active projectiles in the game. */
     private List<Projectile> activeProjectiles;
+    /** List of observers for game state changes. */
+    private List<GameObserver> observers;
 
     /**
      * Constructs a new Game instance.
@@ -40,6 +42,77 @@ public class GameModel {
         this.roundManager = new RoundManager(rounds, this);
         this.isGameOver = false;
         this.activeProjectiles = new ArrayList<>();
+        this.observers = new ArrayList<>();
+    }
+
+    /**
+     * Adds an observer to receive game state notifications.
+     *
+     * @param observer The observer to add
+     */
+    public void addObserver(GameObserver observer) {
+        observers.add(observer);
+    }
+
+    /**
+     * Removes an observer from the list of observers.
+     *
+     * @param observer The observer to remove
+     */
+    public void removeObserver(GameObserver observer) {
+        observers.remove(observer);
+    }
+
+    /**
+     * Notifies all observers that currency has changed.
+     */
+    private void notifyCurrencyChanged() {
+        int currency = player.getCurrency();
+        for (GameObserver observer : observers) {
+            observer.onCurrencyChanged(currency);
+        }
+    }
+
+    /**
+     * Notifies all observers that lives have changed.
+     */
+    private void notifyLivesChanged() {
+        for (GameObserver observer : observers) {
+            observer.onLivesChanged(lives);
+        }
+    }
+
+    /**
+     * Notifies all observers that the round has changed.
+     */
+    private void notifyRoundChanged() {
+        int currentRound = roundManager.getCurrentRoundNumber();
+        int totalRounds = roundManager.getTotalRounds();
+        for (GameObserver observer : observers) {
+            observer.onRoundChanged(currentRound, totalRounds);
+        }
+    }
+
+    /**
+     * Notifies all observers that the round state has changed.
+     */
+    private void notifyRoundStateChanged() {
+        boolean roundInProgress = roundManager.isRoundInProgress();
+        boolean allRoundsComplete = roundManager.areAllRoundsCompleted();
+        for (GameObserver observer : observers) {
+            observer.onRoundStateChanged(roundInProgress, allRoundsComplete);
+        }
+    }
+
+    /**
+     * Notifies all observers that the game is over.
+     *
+     * @param victory true if the player won, false if they lost
+     */
+    private void notifyGameOver(boolean victory) {
+        for (GameObserver observer : observers) {
+            observer.onGameOver(victory);
+        }
     }
 
     /**
@@ -52,7 +125,15 @@ public class GameModel {
         if (isGameOver)
             return;
 
+        boolean wasRoundInProgress = roundManager.isRoundInProgress();
+
         roundManager.update(deltaTime);
+
+        // notify if the round state changed
+        boolean isRoundInProgress = roundManager.isRoundInProgress();
+        if (wasRoundInProgress != isRoundInProgress) {
+            notifyRoundStateChanged();
+        }
 
         List<Projectile> newProjectiles = map.update(deltaTime, roundManager.getActiveEnemies());
         activeProjectiles.addAll(newProjectiles);
@@ -76,6 +157,7 @@ public class GameModel {
      */
     public void enemyReachedEnd(Enemy enemy) {
         this.lives -= 1;
+        notifyLivesChanged();
         roundManager.onEnemyReachedEnd(enemy);
     }
 
@@ -85,6 +167,8 @@ public class GameModel {
      */
     public void startNextRound() {
         roundManager.startNextRound();
+        notifyRoundChanged();
+        notifyRoundStateChanged();
     }
 
     /**
@@ -93,10 +177,12 @@ public class GameModel {
     private void checkGameOver() {
         if (lives <= 0) {
             isGameOver = true;
+            notifyGameOver(false);
         }
 
-        if (roundManager.areAllRoundsCompleted()) {
+        if (roundManager.areAllRoundsCompleted() && !isGameOver) {
             isGameOver = true;
+            notifyGameOver(true);
         }
     }
 
@@ -114,6 +200,7 @@ public class GameModel {
             if (map.placeUnit(unit, x, y)) {
                 player.spendCurrency(unit.getCost());
                 player.incrementUnitsPurchased();
+                notifyCurrencyChanged();
                 return true;
             } else {
                 return false;
@@ -130,6 +217,7 @@ public class GameModel {
      */
     public void awardCurrency(int amount) {
         player.addCurrency(amount);
+        notifyCurrencyChanged();
     }
 
     /**
@@ -189,6 +277,7 @@ public class GameModel {
      */
     public void setLives(int lives) {
         this.lives = Math.max(0, lives);
+        notifyLivesChanged();
     }
 
     /**

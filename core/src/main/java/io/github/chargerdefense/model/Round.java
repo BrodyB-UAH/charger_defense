@@ -111,23 +111,23 @@ public class Round {
 
     /**
      * Called by the game model when an enemy from this round is defeated.
-     * Increments the defeated count and removes the enemy from active list.
+     * Increments the defeated count.
      *
      * @param enemy The enemy that was defeated
      */
     public void onEnemyDefeated(Enemy enemy) {
         enemiesDefeated += 1;
-        activeEnemies.remove(enemy);
+        // Enemy is removed in update()
     }
 
     /**
      * Called by the game model when an enemy from this round reaches the end.
-     * Increments the escaped count and removes the enemy from active list.
+     * Increments the escaped count.
      *
      * @param enemy The enemy that reached the end
      */
     public void onEnemyReachedEnd(Enemy enemy) {
         enemiesEscaped += 1;
-        activeEnemies.remove(enemy);
+        // Enemy is removed in update()
     }
 }

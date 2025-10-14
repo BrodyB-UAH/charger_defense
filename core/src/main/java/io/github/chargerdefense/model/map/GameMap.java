@@ -10,7 +10,6 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
@@ -56,14 +55,10 @@ public abstract class GameMap {
     /**
      * Renders the path that enemies follow.
      * The path is drawn as connected line segments between waypoints.
+     *
+     * @param shapeRenderer The shape renderer to use for drawing
      */
     public void renderPath(ShapeRenderer shapeRenderer) {
-        int screenWidth = Gdx.graphics.getWidth();
-        int screenHeight = Gdx.graphics.getHeight();
-
-        float scaleX = (float) screenWidth / GameConstants.GAME_WIDTH;
-        float scaleY = (float) screenHeight / GameConstants.GAME_HEIGHT;
-
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.BROWN);
 
@@ -72,12 +67,7 @@ public abstract class GameMap {
             Point end = path.getWaypoint(i + 1);
 
             if (start != null && end != null) {
-                float x1 = start.x * scaleX;
-                float y1 = start.y * scaleY;
-                float x2 = end.x * scaleX;
-                float y2 = end.y * scaleY;
-
-                shapeRenderer.line(x1, y1, x2, y2);
+                shapeRenderer.line(start.x, start.y, end.x, end.y);
             }
         }
 
@@ -113,7 +103,7 @@ public abstract class GameMap {
      * @param y The y-coordinate to check
      * @return true if placement is valid, false otherwise
      */
-    private boolean isPlacementValid(int x, int y) {
+    public boolean isPlacementValid(int x, int y) {
         // check if outside map boundaries
         if (x < 0 || x >= GameConstants.GAME_WIDTH || y < 0 || y >= GameConstants.GAME_HEIGHT) {
             return false;
