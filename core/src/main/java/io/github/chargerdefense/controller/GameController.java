@@ -2,11 +2,16 @@ package io.github.chargerdefense.controller;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import io.github.chargerdefense.data.ProfileManager;
+import io.github.chargerdefense.data.UserProfile;
+import io.github.chargerdefense.data.game.SavedGameState;
+import io.github.chargerdefense.data.game.SavedUnit;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.unit.Unit;
 import io.github.chargerdefense.model.unit.BasicUnit;
 
 import java.awt.Point;
+import java.util.ArrayList;
 
 /**
  * Controller for the game view that handles user input and coordinates
@@ -17,6 +22,8 @@ public class GameController extends InputAdapter {
     private final StateManager stateManager;
     /** The main game model that the controller manipulates */
     private final GameModel game;
+    /** The user profile manager */
+    private final ProfileManager profileManager;
     /** The currently selected unit type for placement, or null if none selected */
     private String selectedUnitType;
     /** The current mouse position in game coordinates */
@@ -28,12 +35,14 @@ public class GameController extends InputAdapter {
      * Constructs a new GameController with the specified state manager and game
      * model.
      *
-     * @param stateManager The state manager for handling screen transitions
-     * @param game         The game model to manipulate based on user input
+     * @param stateManager   The state manager for handling screen transitions
+     * @param game           The game model to manipulate based on user input
+     * @param profileManager The profile manager for saving/loading game state
      */
-    public GameController(StateManager stateManager, GameModel game) {
+    public GameController(StateManager stateManager, GameModel game, ProfileManager profileManager) {
         this.stateManager = stateManager;
         this.game = game;
+        this.profileManager = profileManager;
         this.mousePosition = new Point.Float(0, 0);
     }
 
@@ -48,7 +57,7 @@ public class GameController extends InputAdapter {
     @Override
     public boolean keyDown(int keycode) {
         if (keycode == Input.Keys.ESCAPE) {
-            stateManager.showMainMenu();
+            returnToMainMenu();
             return true;
         } else if (keycode == Input.Keys.SPACE) {
             startNextRound();
@@ -118,6 +127,29 @@ public class GameController extends InputAdapter {
      * Transitions the game state back to the main menu.
      */
     public void returnToMainMenu() {
+        UserProfile activeProfile = profileManager.getActiveProfile();
+        if (activeProfile != null) {
+            SavedGameState savedGame = new SavedGameState();
+            savedGame.lives = game.getLives();
+            savedGame.currency = game.getPlayer().getCurrency();
+            savedGame.score = game.getPlayer().getScore();
+            savedGame.enemiesDefeated = game.getPlayer().getEnemiesDefeated();
+            savedGame.unitsPurchased = game.getPlayer().getUnitsPurchased();
+            savedGame.currentRoundIndex = game.getRoundManager().getCurrentRoundNumber() - 2; // adjust for 0-based
+                                                                                              // index
+            savedGame.placedUnits = new ArrayList<>();
+            for (Unit unit : game.getMap().getPlacedUnits()) {
+                SavedUnit savedUnit = new SavedUnit();
+                savedUnit.type = unit.getClass().getSimpleName();
+                savedUnit.x = unit.getPosition().x;
+                savedUnit.y = unit.getPosition().y;
+                savedGame.placedUnits.add(savedUnit);
+            }
+
+            activeProfile.saveGameData(game.getMap().getMapName(), savedGame);
+            profileManager.saveProfile(activeProfile);
+        }
+
         stateManager.showMainMenu();
     }
 

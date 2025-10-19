@@ -3,6 +3,7 @@ package io.github.chargerdefense.data;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,11 +21,15 @@ public class ProfileManager {
 	/** JSON parser instance */
 	private final Json json;
 
+	/** The currently active user profile */
+	private UserProfile activeProfile;
+
 	/**
 	 * Constructs a new ProfileManager and initializes the JSON parser.
 	 */
 	public ProfileManager() {
 		this.json = new Json();
+		json.setOutputType(JsonWriter.OutputType.json);
 		json.setUsePrototypes(false);
 		json.setIgnoreUnknownFields(true);
 
@@ -81,7 +86,7 @@ public class ProfileManager {
 	 * @param username The username of the profile to load
 	 * @return The loaded UserProfile, or null if loading failed
 	 */
-	public UserProfile loadProfile(String username) {
+	public UserProfile loadProfileData(String username) {
 		if (username == null || username.trim().isEmpty()) {
 			Gdx.app.error("ProfileManager", "Cannot load profile: invalid username");
 			return null;
@@ -99,16 +104,27 @@ public class ProfileManager {
 			String jsonData = profileFile.readString();
 			UserProfile profile = json.fromJson(UserProfile.class, jsonData);
 
-			if (profile != null) {
-				profile.updateLastAccessed();
-				Gdx.app.log("ProfileManager", "Successfully loaded profile: " + username);
-			}
-
 			return profile;
 		} catch (Exception e) {
 			Gdx.app.error("ProfileManager", "Failed to parse or load profile: " + username, e);
 			return null;
 		}
+	}
+
+	/**
+	 * Loads a user profile and sets it as the active profile.
+	 *
+	 * @param username The username of the profile to load
+	 * @return The loaded UserProfile, or null if loading failed
+	 */
+	public UserProfile loadProfile(String username) {
+		UserProfile profile = loadProfileData(username);
+		if (profile != null) {
+			profile.updateLastAccessed();
+			this.activeProfile = profile;
+			Gdx.app.log("ProfileManager", "Set active profile: " + username);
+		}
+		return profile;
 	}
 
 	/**
@@ -132,6 +148,7 @@ public class ProfileManager {
 		UserProfile profile = new UserProfile(username.trim());
 		if (saveProfile(profile)) {
 			Gdx.app.log("ProfileManager", "Successfully created new profile: " + username);
+			this.activeProfile = profile;
 			return profile;
 		} else {
 			Gdx.app.error("ProfileManager", "Failed to save new profile: " + username);
@@ -219,5 +236,14 @@ public class ProfileManager {
 		}
 
 		return profileNames;
+	}
+
+	/**
+	 * Gets the currently active user profile.
+	 * 
+	 * @return The active UserProfile, or null if none is active
+	 */
+	public UserProfile getActiveProfile() {
+		return activeProfile;
 	}
 }

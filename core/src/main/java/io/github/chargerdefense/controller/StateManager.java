@@ -2,6 +2,8 @@ package io.github.chargerdefense.controller;
 
 import com.badlogic.gdx.Game;
 
+import io.github.chargerdefense.data.UserProfile;
+import io.github.chargerdefense.data.game.SavedGameState;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.MainMenuModel;
 import io.github.chargerdefense.model.Round;
@@ -57,13 +59,18 @@ public class StateManager {
     /**
      * Starts the game and transitions to the game MVC.
      * 
-     * @param map The game map to use for this game instance.
+     * @param map       The game map to use for this game instance.
+     * @param savedGame The saved game state to load, or null to start a new game.
      */
-    public void startGame(GameMap map) {
-        GameModel gameModel = new GameModel(10, 100, map,
-                generateRounds());
+    public void startGame(GameMap map, SavedGameState savedGame) {
+        GameModel gameModel;
+        if (savedGame != null) {
+            gameModel = new GameModel(savedGame, map, generateRounds());
+        } else {
+            gameModel = new GameModel(10, 100, map, generateRounds());
+        }
 
-        this.gameController = new GameController(this, gameModel);
+        this.gameController = new GameController(this, gameModel, mainMenuModel.getProfileManager());
 
         game.setScreen(new GameView(this, gameModel));
     }

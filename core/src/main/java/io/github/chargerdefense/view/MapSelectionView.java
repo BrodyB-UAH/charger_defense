@@ -15,7 +15,8 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 import io.github.chargerdefense.controller.MainMenuController;
 import io.github.chargerdefense.controller.StateManager;
-import io.github.chargerdefense.model.MapState;
+import io.github.chargerdefense.data.game.SavedGameState;
+import io.github.chargerdefense.model.MainMenuModel;
 import io.github.chargerdefense.model.map.BasicMap;
 import io.github.chargerdefense.model.map.GameMap;
 import io.github.chargerdefense.model.map.SpiralMap;
@@ -30,6 +31,8 @@ import java.util.List;
 public class MapSelectionView implements Screen {
 	/** The controller for handling menu interactions */
 	private final MainMenuController controller;
+	/** The model for managing menu state */
+	private final MainMenuModel model;
 	/** The libGDX stage for organizing and rendering UI elements */
 	private Stage stage;
 	/** The skin containing UI styling and texture information */
@@ -48,6 +51,7 @@ public class MapSelectionView implements Screen {
 	 */
 	public MapSelectionView(StateManager stateManager) {
 		this.controller = stateManager.getMainMenuController();
+		this.model = controller.getMainMenuModel();
 		this.availableMaps = new ArrayList<>();
 		initializeAvailableMaps();
 	}
@@ -127,6 +131,7 @@ public class MapSelectionView implements Screen {
 	 */
 	private void selectMap(GameMap map) {
 		this.selectedMap = map;
+		controller.loadSavesForMap(map.getMapName());
 		updateDetailsPanel();
 	}
 
@@ -150,29 +155,6 @@ public class MapSelectionView implements Screen {
 		descriptionLabel.setWrap(true);
 		detailsTable.add(descriptionLabel).width(350).padBottom(20).row();
 
-		Label savesTitle = new Label("Existing Saves", skin);
-		savesTitle.setFontScale(1.1f);
-		detailsTable.add(savesTitle).padBottom(10).row();
-
-		// TODO load actual saves from the current profile
-		List<SaveInfo> saves = getExistingSaves(selectedMap.getMapName());
-
-		if (saves.isEmpty()) {
-			Label noSavesLabel = new Label("No existing saves", skin);
-			detailsTable.add(noSavesLabel).padBottom(15).row();
-		} else {
-			for (SaveInfo save : saves) {
-				TextButton saveButton = new TextButton(save.profileName, skin);
-				saveButton.addListener(new ChangeListener() {
-					@Override
-					public void changed(ChangeEvent event, Actor actor) {
-						controller.onLoadSaveClicked(selectedMap, save.state);
-					}
-				});
-				detailsTable.add(saveButton).fillX().width(350).pad(3).row();
-			}
-		}
-
 		TextButton newGameButton = new TextButton("New Game", skin);
 		newGameButton.addListener(new ChangeListener() {
 			@Override
@@ -180,41 +162,40 @@ public class MapSelectionView implements Screen {
 				controller.onNewGameClicked(selectedMap);
 			}
 		});
-		detailsTable.add(newGameButton).fillX().width(350).padTop(20);
-	}
 
-	/**
-	 * Holds information about a saved map state.
-	 */
-	private static class SaveInfo {
-		/** The name of the profile associated with this save */
-		final String profileName;
-		/** The state of the map save */
-		final MapState state;
+		detailsTable.add(newGameButton).fillX().width(350).padBottom(20).row();
 
-		/**
-		 * Creates a new SaveInfo instance.
-		 * 
-		 * @param profileName The name of the profile associated with this save
-		 * @param state       The state of the map save
-		 */
-		SaveInfo(String profileName, MapState state) {
-			this.profileName = profileName;
-			this.state = state;
+		Label savesTitle = new Label("Existing Saves", skin);
+		savesTitle.setFontScale(1.1f);
+		detailsTable.add(savesTitle).padBottom(10).row();
+
+		List<SavedGameState> saves = model.getExistingSaves();
+
+		if (saves.isEmpty()) {
+			Label noSavesLabel = new Label("No existing saves", skin);
+			detailsTable.add(noSavesLabel).padBottom(15).row();
+		} else {
+			for (SavedGameState save : saves) {
+				Table saveTable = new Table(skin);
+				saveTable.add("Profile: " + save.profileName).left().row();
+				saveTable.add("Round: " + (save.currentRoundIndex + 1)).left().row();
+				saveTable.add("Lives: " + save.lives).left().row();
+				saveTable.add("Currency: " + save.currency).left().row();
+				saveTable.add("Score: " + save.score).left().row();
+
+				TextButton loadButton = new TextButton("Load", skin);
+				loadButton.addListener(new ChangeListener() {
+					@Override
+					public void changed(ChangeEvent event, Actor actor) {
+						controller.onLoadSaveClicked(selectedMap, save);
+					}
+				});
+				saveTable.add(loadButton).padTop(10);
+
+				detailsTable.add(saveTable).fillX().pad(10).row();
+			}
 		}
-	}
 
-	/**
-	 * Retrieves existing save information for the current profile and map.
-	 *
-	 * @param mapName The name of the map to get saves for
-	 * @return A list of save information
-	 */
-	private List<SaveInfo> getExistingSaves(String mapName) {
-		// TODO load profiles and find save data for this map
-		List<SaveInfo> saves = new ArrayList<>();
-
-		return saves;
 	}
 
 	@Override

@@ -132,4 +132,13 @@ public class RoundManager {
     public boolean isRoundInProgress() {
         return currentRound != null && !currentRound.isComplete();
     }
+
+    /**
+     * Sets the current round index, primarily for loading saved games.
+     *
+     * @param currentRoundIndex The index of the round to set as current
+     */
+    public void setCurrentRoundIndex(int currentRoundIndex) {
+        this.currentRoundIndex = currentRoundIndex;
+    }
 }

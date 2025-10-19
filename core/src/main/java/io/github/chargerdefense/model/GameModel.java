@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import io.github.chargerdefense.data.game.SavedGameState;
+import io.github.chargerdefense.data.game.SavedUnit;
 import io.github.chargerdefense.model.enemy.Enemy;
 import io.github.chargerdefense.model.map.GameMap;
+import io.github.chargerdefense.model.unit.BasicUnit;
 import io.github.chargerdefense.model.unit.Unit;
 
 /**
@@ -43,6 +46,52 @@ public class GameModel {
         this.isGameOver = false;
         this.activeProjectiles = new ArrayList<>();
         this.observers = new ArrayList<>();
+    }
+
+    /**
+     * Constructs a new Game instance from a saved game state.
+     * 
+     * @param savedGame The saved game state to load.
+     * @param map       The game map to be used.
+     * @param rounds    A list of predefined rounds for the game.
+     */
+    public GameModel(SavedGameState savedGame, GameMap map, List<Round> rounds) {
+        this.player = new Player(savedGame.currency);
+        this.player.setScore(savedGame.score);
+        this.player.setEnemiesDefeated(savedGame.enemiesDefeated);
+        this.player.setUnitsPurchased(savedGame.unitsPurchased);
+
+        this.map = map;
+        this.lives = savedGame.lives;
+
+        for (SavedUnit savedUnit : savedGame.placedUnits) {
+            Unit unit = createUnitFromSerializedType(savedUnit.type);
+            if (unit != null) {
+                this.map.placeUnit(unit, savedUnit.x, savedUnit.y);
+            }
+        }
+
+        this.roundManager = new RoundManager(rounds, this);
+        this.roundManager.setCurrentRoundIndex(savedGame.currentRoundIndex);
+
+        this.isGameOver = false;
+        this.activeProjectiles = new ArrayList<>();
+        this.observers = new ArrayList<>();
+    }
+
+    /**
+     * Creates a unit instance from the serialized unit type name.
+     * 
+     * @param unitType The name/type of the unit
+     * @return A new unit instance, or null if the type is invalid
+     */
+    private Unit createUnitFromSerializedType(String unitType) {
+        switch (unitType) {
+            case "BasicUnit":
+                return new BasicUnit();
+            default:
+                return null;
+        }
     }
 
     /**
