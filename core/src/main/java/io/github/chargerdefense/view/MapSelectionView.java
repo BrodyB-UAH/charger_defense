@@ -18,6 +18,7 @@ import io.github.chargerdefense.controller.StateManager;
 import io.github.chargerdefense.model.MapState;
 import io.github.chargerdefense.model.map.BasicMap;
 import io.github.chargerdefense.model.map.GameMap;
+import io.github.chargerdefense.model.map.SpiralMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +57,7 @@ public class MapSelectionView implements Screen {
 	 */
 	private void initializeAvailableMaps() {
 		availableMaps.add(new BasicMap());
+		availableMaps.add(new SpiralMap());
 	}
 
 	@Override

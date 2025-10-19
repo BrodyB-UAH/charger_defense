@@ -11,6 +11,9 @@ import java.util.List;
  * A basic rectangular map with a simple path layout.
  */
 public class BasicMap extends GameMap {
+	/**
+	 * Constructs a BasicMap with a predefined path.
+	 */
 	public BasicMap() {
 		super(createBasicPath());
 	}
