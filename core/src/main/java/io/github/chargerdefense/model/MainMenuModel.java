@@ -199,14 +199,12 @@ public class MainMenuModel {
      */
     public boolean createNewProfile(String username) {
         if (username == null || username.trim().isEmpty()) {
-            Gdx.app.error("MainMenuModel", "Cannot create profile with empty username");
             return false;
         }
 
         String trimmedUsername = username.trim();
 
         if (profileManager.profileExists(trimmedUsername)) {
-            Gdx.app.error("MainMenuModel", "Profile already exists: " + trimmedUsername);
             return false;
         }
 
@@ -219,7 +217,6 @@ public class MainMenuModel {
 
             setActiveProfile(trimmedUsername);
 
-            Gdx.app.log("MainMenuModel", "Successfully created new profile: " + trimmedUsername);
             return true;
         } else {
             Gdx.app.error("MainMenuModel", "Failed to create profile: " + trimmedUsername);
@@ -236,7 +233,6 @@ public class MainMenuModel {
      */
     public boolean deleteProfile(String username) {
         if (username == null || username.trim().isEmpty()) {
-            Gdx.app.error("MainMenuModel", "Cannot delete profile with empty username");
             return false;
         }
 
@@ -251,8 +247,6 @@ public class MainMenuModel {
             }
 
             notifyProfilesLoaded();
-
-            Gdx.app.log("MainMenuModel", "Successfully deleted profile: " + trimmedUsername);
         } else {
             Gdx.app.error("MainMenuModel", "Failed to delete profile: " + trimmedUsername);
         }
@@ -268,17 +262,10 @@ public class MainMenuModel {
      */
     public boolean saveCurrentProfile() {
         if (currentUserProfile == null) {
-            Gdx.app.error("MainMenuModel", "No current profile to save");
             return false;
         }
 
         boolean saved = profileManager.saveProfile(currentUserProfile);
-        if (saved) {
-            Gdx.app.log("MainMenuModel", "Successfully saved current profile: " + currentUserProfile.getUsername());
-        } else {
-            Gdx.app.error("MainMenuModel", "Failed to save current profile: " + currentUserProfile.getUsername());
-        }
-
         return saved;
     }
 
@@ -291,14 +278,12 @@ public class MainMenuModel {
      */
     public boolean updateHighScore(String mapName, int score) {
         if (currentUserProfile == null) {
-            Gdx.app.error("MainMenuModel", "No active profile to update high score");
             return false;
         }
 
         boolean updated = currentUserProfile.updateHighScore(mapName, score);
         if (updated) {
             saveCurrentProfile();
-            Gdx.app.log("MainMenuModel", "New high score for " + mapName + ": " + score);
         }
 
         return updated;

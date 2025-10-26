@@ -175,25 +175,7 @@ public class MapSelectionView implements Screen {
 			Label noSavesLabel = new Label("No existing saves", skin);
 			detailsTable.add(noSavesLabel).padBottom(15).row();
 		} else {
-			for (SavedGameState save : saves) {
-				Table saveTable = new Table(skin);
-				saveTable.add("Profile: " + save.profileName).left().row();
-				saveTable.add("Round: " + (save.currentRoundIndex + 1)).left().row();
-				saveTable.add("Lives: " + save.lives).left().row();
-				saveTable.add("Currency: " + save.currency).left().row();
-				saveTable.add("Score: " + save.score).left().row();
-
-				TextButton loadButton = new TextButton("Load", skin);
-				loadButton.addListener(new ChangeListener() {
-					@Override
-					public void changed(ChangeEvent event, Actor actor) {
-						controller.onLoadSaveClicked(selectedMap, save);
-					}
-				});
-				saveTable.add(loadButton).padTop(10);
-
-				detailsTable.add(saveTable).fillX().pad(10).row();
-			}
+			// TODO: show existing saves
 		}
 
 	}

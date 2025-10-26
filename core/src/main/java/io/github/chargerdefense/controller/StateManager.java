@@ -2,7 +2,6 @@ package io.github.chargerdefense.controller;
 
 import com.badlogic.gdx.Game;
 
-import io.github.chargerdefense.data.UserProfile;
 import io.github.chargerdefense.data.game.SavedGameState;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.MainMenuModel;
