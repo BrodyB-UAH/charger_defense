@@ -198,6 +198,9 @@ public class GameModel implements PlayerObserver {
 
     /**
      * Checks for the game's win or loss conditions.
+     * When the player has no more lives, the game is lost. If the player completes
+     * all rounds, and they still have lives, the game is won. If both of these
+     * conditions are not true, then the game is still in-progress.
      */
     private void checkGameOver() {
         if (lives <= 0) {
