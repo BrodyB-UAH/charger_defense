@@ -1,5 +1,8 @@
 package io.github.chargerdefense.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents the player's game state data.
  */
@@ -13,6 +16,9 @@ public class Player {
     private int enemiesDefeated;
     /** The total number of units purchased by the player. */
     private int unitsPurchased;
+
+    /** The list of observers monitoring the player's state. */
+    private final List<PlayerObserver> observers = new ArrayList<>();
 
     /**
      * Constructs a new Player with the specified initial currency.
@@ -43,6 +49,7 @@ public class Player {
      */
     public void setCurrency(int currency) {
         this.currency = Math.max(0, currency);
+        notifyCurrencyChanged();
     }
 
     /**
@@ -53,6 +60,7 @@ public class Player {
      */
     public void addCurrency(int amount) {
         this.currency += amount;
+        notifyCurrencyChanged();
     }
 
     /**
@@ -65,9 +73,35 @@ public class Player {
     public boolean spendCurrency(int amount) {
         if (currency >= amount) {
             currency -= amount;
+            notifyCurrencyChanged();
             return true;
         }
         return false;
+    }
+
+    /**
+     * Adds an observer to monitor player state changes.
+     * 
+     * @param observer The observer to add
+     */
+    public void addObserver(PlayerObserver observer) {
+        observers.add(observer);
+    }
+
+    /**
+     * Removes an observer from monitoring player state changes.
+     * 
+     * @param observer The observer to remove
+     */
+    public void removeObserver(PlayerObserver observer) {
+        observers.remove(observer);
+    }
+
+    /** Notifies all observers of a change in the player's currency. */
+    private void notifyCurrencyChanged() {
+        for (PlayerObserver observer : observers) {
+            observer.onCurrencyChanged(currency);
+        }
     }
 
     /**

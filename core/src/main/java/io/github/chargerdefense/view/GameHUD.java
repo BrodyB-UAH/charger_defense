@@ -44,6 +44,9 @@ public class GameHUD implements GameObserver {
 	/** Flag indicating whether the shop panel is visible */
 	private boolean shopPanelVisible = false;
 
+	/** The upgrade menu view for displaying unit upgrade options */
+	private final UpgradeMenuView upgradeMenuView;
+
 	/**
 	 * Constructs a new GameHUD with the specified game model and controller.
 	 *
@@ -55,7 +58,7 @@ public class GameHUD implements GameObserver {
 		this.controller = controller;
 		this.stage = new Stage(new ScreenViewport());
 		this.skin = new Skin(Gdx.files.internal("uiskin.json"));
-
+		this.upgradeMenuView = new UpgradeMenuView(gameModel, skin);
 		initializeUI();
 
 		gameModel.addObserver(this);
@@ -112,6 +115,12 @@ public class GameHUD implements GameObserver {
 			}
 		});
 		topTable.add(menuButton);
+
+		Table bottomTable = new Table();
+		bottomTable.setFillParent(true);
+		bottomTable.bottom();
+		bottomTable.add(upgradeMenuView);
+		stage.addActor(bottomTable);
 
 		createUnitShopPanel();
 	}
@@ -211,6 +220,7 @@ public class GameHUD implements GameObserver {
 	 */
 	public void update(float delta) {
 		stage.act(delta);
+		upgradeMenuView.update();
 	}
 
 	@Override
@@ -294,6 +304,7 @@ public class GameHUD implements GameObserver {
 	 */
 	public void dispose() {
 		gameModel.removeObserver(this);
+		upgradeMenuView.dispose();
 		stage.dispose();
 		skin.dispose();
 	}

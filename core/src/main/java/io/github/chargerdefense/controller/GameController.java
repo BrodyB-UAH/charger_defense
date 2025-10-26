@@ -8,7 +8,7 @@ import io.github.chargerdefense.data.game.SavedGameState;
 import io.github.chargerdefense.data.game.SavedUnit;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.unit.Unit;
-import io.github.chargerdefense.model.unit.BasicUnit;
+import io.github.chargerdefense.model.unit.basic.BasicUnit;
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -88,6 +88,17 @@ public class GameController extends InputAdapter {
             }
             return true;
         }
+
+        for (Unit unit : game.getMap().getPlacedUnits()) {
+            if (unit.contains(gameX, gameY)) {
+                game.setSelectedUnit(unit);
+                return true;
+            }
+        }
+
+        // if no unit clicked, deselect
+        game.setSelectedUnit(null);
+
         return false;
     }
 

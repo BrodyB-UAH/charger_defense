@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import io.github.chargerdefense.model.Projectile;
 import io.github.chargerdefense.model.enemy.Enemy;
+import io.github.chargerdefense.model.unit.upgrade.Upgrade;
+import io.github.chargerdefense.model.unit.upgrade.UpgradePath;
 
 import java.awt.Point;
 import java.util.List;
@@ -28,6 +30,10 @@ public abstract class Unit {
     private double cooldown;
     /** The current enemy being targeted by the unit. */
     private Enemy currentTarget;
+    /** The upgrade path for this unit. */
+    protected UpgradePath upgradePath;
+    /** Whether the unit is currently selected. */
+    private boolean isSelected = false;
 
     /**
      * Constructs a Unit.
@@ -163,6 +169,15 @@ public abstract class Unit {
     }
 
     /**
+     * Gets the damage dealt by this unit.
+     * 
+     * @return The damage amount
+     */
+    public double getDamage() {
+        return damage;
+    }
+
+    /**
      * Renders the unit as a colored square with a range circle.
      *
      * @param shapeRenderer The shape renderer to use for drawing
@@ -178,6 +193,11 @@ public abstract class Unit {
         shapeRenderer.setColor(0.5f, 0.5f, 1.0f, 0.2f);
         shapeRenderer.circle(position.x, position.y, (float) range);
 
+        if (isSelected) {
+            shapeRenderer.setColor(Color.YELLOW);
+            shapeRenderer.rect(position.x - size / 2 - 2, position.y - size / 2 - 2, size + 4, size + 4);
+        }
+
         shapeRenderer.setColor(Color.BLUE);
         shapeRenderer.rect(position.x - size / 2, position.y - size / 2, size, size);
 
@@ -187,5 +207,83 @@ public abstract class Unit {
             shapeRenderer.setColor(Color.RED);
             shapeRenderer.line(position.x, position.y, targetPos.x, targetPos.y);
         }
+    }
+
+    /**
+     * Gets the upgrade path for this unit.
+     * 
+     * @return The upgrade path
+     */
+    public UpgradePath getUpgradePath() {
+        return upgradePath;
+    }
+
+    /** Applies the next upgrade in the upgrade path. */
+    public void applyUpgrade() {
+        if (upgradePath != null) {
+            Upgrade nextUpgrade = upgradePath.getNextUpgrade();
+            if (nextUpgrade != null) {
+                nextUpgrade.apply(this);
+                upgradePath.advance();
+            }
+        }
+    }
+
+    /**
+     * Checks if the unit is currently selected.
+     * 
+     * @return true if the unit is selected, false otherwise
+     */
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    /**
+     * Sets whether the unit is selected.
+     * 
+     * @param selected true to select the unit, false to deselect
+     */
+    public void setSelected(boolean selected) {
+        this.isSelected = selected;
+    }
+
+    /**
+     * Checks if the unit contains the specified coordinates.
+     * 
+     * @param x The x coordinate to check
+     * @param y The y coordinate to check
+     * @return true if the coordinates are within the unit's bounds, false otherwise
+     */
+    public boolean contains(int x, int y) {
+        float size = 16.0f;
+        return (x >= position.x - size / 2 && x <= position.x + size / 2 &&
+                y >= position.y - size / 2 && y <= position.y + size / 2);
+    }
+
+    /**
+     * Sets the damage dealt by the unit.
+     * 
+     * @param damage The new damage value
+     */
+    public void setDamage(double damage) {
+        this.damage = damage;
+    }
+
+    /**
+     * Sets the attack range of the unit.
+     * 
+     * @param range The new range value
+     */
+    public void setRange(double range) {
+        this.range = range;
+    }
+
+    /**
+     * Sets the fire rate of the unit.
+     * 
+     * @param fireRate The new fire rate value
+     */
+    public void setFireRate(double fireRate) {
+        this.fireRate = fireRate;
     }
 }

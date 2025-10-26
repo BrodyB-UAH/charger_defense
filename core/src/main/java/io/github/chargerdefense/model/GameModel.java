@@ -8,13 +8,14 @@ import io.github.chargerdefense.data.game.SavedGameState;
 import io.github.chargerdefense.data.game.SavedUnit;
 import io.github.chargerdefense.model.enemy.Enemy;
 import io.github.chargerdefense.model.map.GameMap;
-import io.github.chargerdefense.model.unit.BasicUnit;
+import io.github.chargerdefense.model.unit.basic.BasicUnit;
+import io.github.chargerdefense.model.unit.upgrade.Upgrade;
 import io.github.chargerdefense.model.unit.Unit;
 
 /**
  * Manages the main game loop, game state, and core components.
  */
-public class GameModel {
+public class GameModel implements PlayerObserver {
     /** The player in the game. */
     private Player player;
     /** The game map. */
@@ -29,6 +30,8 @@ public class GameModel {
     private List<Projectile> activeProjectiles;
     /** List of observers for game state changes. */
     private List<GameObserver> observers;
+    /** The currently selected unit for actions. */
+    private Unit selectedUnit;
 
     /**
      * Constructs a new Game instance.
@@ -40,6 +43,7 @@ public class GameModel {
      */
     public GameModel(int initialLives, int initialCurrency, GameMap map, List<Round> rounds) {
         this.player = new Player(initialCurrency);
+        this.player.addObserver(this);
         this.map = map;
         this.lives = initialLives;
         this.roundManager = new RoundManager(rounds, this);
@@ -57,6 +61,7 @@ public class GameModel {
      */
     public GameModel(SavedGameState savedGame, GameMap map, List<Round> rounds) {
         this.player = new Player(savedGame.currency);
+        this.player.addObserver(this);
         this.player.setScore(savedGame.score);
         this.player.setEnemiesDefeated(savedGame.enemiesDefeated);
         this.player.setUnitsPurchased(savedGame.unitsPurchased);
@@ -249,7 +254,6 @@ public class GameModel {
             if (map.placeUnit(unit, x, y)) {
                 player.spendCurrency(unit.getCost());
                 player.incrementUnitsPurchased();
-                notifyCurrencyChanged();
                 return true;
             } else {
                 return false;
@@ -266,7 +270,6 @@ public class GameModel {
      */
     public void awardCurrency(int amount) {
         player.addCurrency(amount);
-        notifyCurrencyChanged();
     }
 
     /**
@@ -354,5 +357,46 @@ public class GameModel {
      */
     public RoundManager getRoundManager() {
         return roundManager;
+    }
+
+    /**
+     * Gets the currently selected unit.
+     * 
+     * @return The selected unit, or null if none is selected
+     */
+    public Unit getSelectedUnit() {
+        return selectedUnit;
+    }
+
+    /**
+     * Sets the currently selected unit.
+     * 
+     * @param unit The unit to select, or null to clear selection
+     */
+    public void setSelectedUnit(Unit unit) {
+        if (this.selectedUnit != null) {
+            this.selectedUnit.setSelected(false);
+        }
+        this.selectedUnit = unit;
+        if (this.selectedUnit != null) {
+            this.selectedUnit.setSelected(true);
+        }
+    }
+
+    /** Upgrades the currently selected unit, if applicable. */
+    public void upgradeSelectedUnit() {
+        if (selectedUnit != null) {
+            Upgrade nextUpgrade = selectedUnit.getUpgradePath()
+                    .getNextUpgrade();
+            if (nextUpgrade != null && player.canAfford(nextUpgrade.getCost())) {
+                player.spendCurrency(nextUpgrade.getCost());
+                selectedUnit.applyUpgrade();
+            }
+        }
+    }
+
+    @Override
+    public void onCurrencyChanged(int newCurrency) {
+        notifyCurrencyChanged();
     }
 }
