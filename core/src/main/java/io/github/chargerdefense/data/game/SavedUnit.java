@@ -5,4 +5,8 @@ package io.github.chargerdefense.data.game;
  */
 public class SavedUnit {
     // TODO: implemented saved unit fields
+
+    /** Constructs a new SavedUnit. */
+    public SavedUnit() {
+    }
 }
