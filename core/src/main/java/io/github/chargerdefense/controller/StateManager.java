@@ -44,6 +44,12 @@ public class StateManager {
         this.mainMenuController = new MainMenuController(this, mainMenuModel);
     }
 
+    /**
+     * Generates a list of rounds for the game.
+     * Each round contains a predefined set of enemies.
+     * 
+     * @return A list of Round objects representing the game's rounds.
+     */
     public List<Round> generateRounds() {
         return new ArrayList<>(
                 List.of(
