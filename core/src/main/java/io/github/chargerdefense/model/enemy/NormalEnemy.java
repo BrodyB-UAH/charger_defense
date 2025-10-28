@@ -8,8 +8,6 @@ public class NormalEnemy extends Enemy {
 
     /**
      * Constructs a new NormalEnemy with default stats.
-     *
-     * @param gameModel The game model to notify of enemy events
      */
     public NormalEnemy() {
         super(100, 10, 10);

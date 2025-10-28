@@ -140,20 +140,14 @@ public class GameController extends InputAdapter {
     public void returnToMainMenu() {
         UserProfile activeProfile = profileManager.getActiveProfile();
         if (activeProfile != null) {
-            SavedGameState savedGame = new SavedGameState();
-            savedGame.lives = game.getLives();
-            savedGame.currency = game.getPlayer().getCurrency();
-            savedGame.score = game.getPlayer().getScore();
-            savedGame.enemiesDefeated = game.getPlayer().getEnemiesDefeated();
-            savedGame.unitsPurchased = game.getPlayer().getUnitsPurchased();
-            savedGame.currentRoundIndex = game.getRoundManager().getCurrentRoundNumber() - 2; // adjust for 0-based
-                                                                                              // index
-            savedGame.placedUnits = new ArrayList<>();
+            SavedGameState savedGame = new SavedGameState(
+                    game.getLives(), game.getPlayer().getCurrency(), game.getPlayer().getScore(),
+                    game.getPlayer().getEnemiesDefeated(), game.getPlayer().getUnitsPurchased(),
+                    game.getRoundManager().getCurrentRoundNumber() - 2, // adjust for 0-based index
+                    new ArrayList<>());
             for (Unit unit : game.getMap().getPlacedUnits()) {
-                SavedUnit savedUnit = new SavedUnit();
-                savedUnit.type = unit.getClass().getSimpleName();
-                savedUnit.x = unit.getPosition().x;
-                savedUnit.y = unit.getPosition().y;
+                SavedUnit savedUnit = new SavedUnit(
+                        unit.getClass().getSimpleName(), unit.getPosition().x, unit.getPosition().y);
                 savedGame.placedUnits.add(savedUnit);
             }
 
