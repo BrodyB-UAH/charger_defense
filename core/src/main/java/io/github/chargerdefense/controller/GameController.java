@@ -3,12 +3,16 @@ package io.github.chargerdefense.controller;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import io.github.chargerdefense.data.ProfileManager;
+import io.github.chargerdefense.data.UserProfile;
+import io.github.chargerdefense.data.game.SavedGameState;
+import io.github.chargerdefense.data.game.SavedUnit;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.unit.Unit;
 import io.github.chargerdefense.model.unit.basic.BasicUnit;
 import io.github.chargerdefense.model.unit.spike.SpikeFactoryUnit;
 
 import java.awt.Point;
+import java.util.ArrayList;
 
 /**
  * Controller for the game view that handles user input and coordinates
@@ -135,7 +139,23 @@ public class GameController extends InputAdapter {
      * Transitions the game state back to the main menu.
      */
     public void returnToMainMenu() {
-        // TODO: save game
+        UserProfile activeProfile = profileManager.getActiveProfile();
+        if (activeProfile != null) {
+            SavedGameState savedGame = new SavedGameState(
+                    game.getLives(), game.getPlayer().getCurrency(), game.getPlayer().getScore(),
+                    game.getPlayer().getEnemiesDefeated(), game.getPlayer().getUnitsPurchased(),
+                    game.getRoundManager().getCurrentRoundNumber() - 2, // adjust for 0-based index
+                    new ArrayList<>());
+            for (Unit unit : game.getMap().getPlacedUnits()) {
+                SavedUnit savedUnit = new SavedUnit(
+                        unit.getClass().getSimpleName(), unit.getPosition().x, unit.getPosition().y);
+                savedGame.placedUnits.add(savedUnit);
+            }
+
+            activeProfile.saveGameData(game.getMap().getMapName(), savedGame);
+            profileManager.saveProfile(activeProfile);
+        }
+
         stateManager.showMainMenu();
     }
 

@@ -5,10 +5,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import io.github.chargerdefense.data.game.SavedGameState;
+import io.github.chargerdefense.data.game.SavedUnit;
 import io.github.chargerdefense.model.enemy.Enemy;
 import io.github.chargerdefense.model.map.GameMap;
 import io.github.chargerdefense.model.unit.upgrade.Upgrade;
 import io.github.chargerdefense.model.unit.Unit;
+import io.github.chargerdefense.model.unit.basic.BasicUnit;
 
 /**
  * Manages the main game loop, game state, and core components.
@@ -58,15 +60,43 @@ public class GameModel implements PlayerObserver {
      * @param rounds    A list of predefined rounds for the game.
      */
     public GameModel(SavedGameState savedGame, GameMap map, List<Round> rounds) {
-        // TODO load saved game
+        this.player = new Player(savedGame.currency);
+        this.player.addObserver(this);
+        this.player.setScore(savedGame.score);
+        this.player.setEnemiesDefeated(savedGame.enemiesDefeated);
+        this.player.setUnitsPurchased(savedGame.unitsPurchased);
 
         this.map = map;
+        this.lives = savedGame.lives;
+
+        for (SavedUnit savedUnit : savedGame.placedUnits) {
+            Unit unit = createUnitFromSerializedType(savedUnit.type);
+            if (unit != null) {
+                this.map.placeUnit(unit, savedUnit.x, savedUnit.y);
+            }
+        }
 
         this.roundManager = new RoundManager(rounds, this);
+        this.roundManager.setCurrentRoundIndex(savedGame.currentRoundIndex);
 
         this.isGameOver = false;
         this.activeProjectiles = new ArrayList<>();
         this.observers = new ArrayList<>();
+    }
+
+    /**
+     * Creates a unit instance from the serialized unit type name.
+     * 
+     * @param unitType The name/type of the unit
+     * @return A new unit instance, or null if the type is invalid
+     */
+    private Unit createUnitFromSerializedType(String unitType) {
+        switch (unitType) {
+            case "BasicUnit":
+                return new BasicUnit();
+            default:
+                return null;
+        }
     }
 
     /**

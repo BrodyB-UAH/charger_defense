@@ -62,13 +62,39 @@ public class MainMenuController {
     }
 
     /**
+     * Handles loading an existing save from map selection.
+     * Loads the game state and starts the game.
+     *
+     * @param map       The game map
+     * @param savedGame The saved game state to load
+     */
+    public void onLoadSaveClicked(GameMap map, SavedGameState savedGame) {
+        stateManager.startGame(map, savedGame);
+    }
+
+    /**
      * Loads existing saves for the specified map into the map selection model.
      * 
      * @param mapName The name of the map to load saves for
      */
     public void loadSavesForMap(String mapName) {
         List<SavedGameState> saves = new ArrayList<>();
-        // TODO load existing saves
+        ProfileManager profileManager = model.getProfileManager();
+        List<String> profileNames = profileManager.getAllProfileNames();
+
+        for (String profileName : profileNames) {
+            UserProfile profile = profileManager.loadProfileData(profileName);
+            if (profile != null) {
+                MapState mapState = profile.getMapState(mapName);
+                if (mapState.hasSaveData()) {
+                    SavedGameState savedGame = profile.loadGameData(mapName);
+                    if (savedGame != null) {
+                        savedGame.profileName = profileName;
+                        saves.add(savedGame);
+                    }
+                }
+            }
+        }
         model.setExistingSaves(saves);
     }
 

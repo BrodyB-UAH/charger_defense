@@ -4,9 +4,27 @@ package io.github.chargerdefense.data.game;
  * Represents a saved unit's data for serialization.
  */
 public class SavedUnit {
-    // TODO: implemented saved unit fields
+    /** The type of the unit. */
+    public String type;
+    /** The x-coordinate of the unit. */
+    public int x;
+    /** The y-coordinate of the unit. */
+    public int y;
 
-    /** Constructs a new SavedUnit. */
+    /**
+     * Constructs a new SavedUnit
+     * 
+     * @param type The type of the unit
+     * @param x    The x-coordinate of the unit
+     * @param y    The y-coordinate of the unit
+     */
+    public SavedUnit(String type, int x, int y) {
+        this.type = type;
+        this.x = x;
+        this.y = y;
+    }
+
+    /** Default constructor for serialization purposes. */
     public SavedUnit() {
     }
 }
