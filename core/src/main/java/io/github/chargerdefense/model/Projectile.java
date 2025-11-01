@@ -54,6 +54,22 @@ public class Projectile {
     }
 
     /**
+     * Constructs a stationary projectile (like a spike) at a specific position.
+     *
+     * @param origin   The Unit that created the projectile.
+     * @param position The position where the projectile should be placed.
+     * @param damage   The damage to be dealt upon impact.
+     */
+    public Projectile(Unit origin, Point.Double position, double damage) {
+        this.origin = origin;
+        this.target = null;
+        this.damage = damage;
+        this.speed = 0;
+        this.isDestroyed = false;
+        this.position = position;
+    }
+
+    /**
      * Updates the projectile's position and checks for collision with the target.
      *
      * @param deltaTime The time elapsed since the last update (in seconds)
@@ -86,7 +102,9 @@ public class Projectile {
             position.y += velocity.y * deltaTime;
         }
 
-        if (checkHit()) {
+        // only check for collision if projectile has a target (non-stationary);
+        // stationary projectiles are checked by enemies
+        if (target != null && checkHit()) {
             impact();
             isDestroyed = true;
             return true;
@@ -119,6 +137,38 @@ public class Projectile {
     private void impact() {
         if (target != null && !target.isDead()) {
             target.takeDamage(damage);
+        }
+    }
+
+    /**
+     * Checks if this projectile collides with the given enemy.
+     * Used by enemies to check collision with stationary projectiles like spikes.
+     *
+     * @param enemy The enemy to check collision with
+     * @return true if collision detected
+     */
+    public boolean checkCollisionWithEnemy(Enemy enemy) {
+        if (isDestroyed || enemy == null || enemy.isDead()) {
+            return false;
+        }
+
+        Point enemyPos = enemy.getPosition();
+        double distanceSq = Math.pow(position.x - enemyPos.x, 2) +
+                Math.pow(position.y - enemyPos.y, 2);
+
+        return distanceSq <= Math.pow(hitRadius, 2);
+    }
+
+    /**
+     * Applies damage to the given enemy and destroys this projectile.
+     * Called by enemies when they collide with a stationary projectile.
+     *
+     * @param enemy The enemy to damage
+     */
+    public void hitEnemy(Enemy enemy) {
+        if (!isDestroyed && enemy != null && !enemy.isDead()) {
+            enemy.takeDamage(damage);
+            isDestroyed = true;
         }
     }
 

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.Path;
+import io.github.chargerdefense.model.Projectile;
 
 import java.awt.Point;
 
@@ -107,6 +108,24 @@ public abstract class Enemy {
                 position.x = (int) preciseX;
                 position.y = (int) preciseY;
                 remainingDistance = 0;
+            }
+        }
+    }
+
+    /**
+     * Checks for collisions with stationary projectiles (like spikes) and takes damage.
+     * Should be called after movement to check if the enemy walked over any spikes.
+     *
+     * @param projectiles The list of active projectiles to check
+     */
+    public void checkProjectileCollisions(java.util.List<Projectile> projectiles) {
+        if (isDead || position == null) {
+            return;
+        }
+
+        for (Projectile projectile : projectiles) {
+            if (projectile.checkCollisionWithEnemy(this)) {
+                projectile.hitEnemy(this);
             }
         }
     }

@@ -6,6 +6,7 @@ import io.github.chargerdefense.data.ProfileManager;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.unit.Unit;
 import io.github.chargerdefense.model.unit.basic.BasicUnit;
+import io.github.chargerdefense.model.unit.spike.SpikeFactoryUnit;
 
 import java.awt.Point;
 
@@ -162,6 +163,8 @@ public class GameController extends InputAdapter {
         switch (unitType) {
             case "Basic Unit":
                 return new BasicUnit();
+            case "Spike Factory":
+                return new SpikeFactoryUnit();
             default:
                 return null;
         }

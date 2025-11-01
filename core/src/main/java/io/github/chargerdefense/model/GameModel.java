@@ -7,7 +7,6 @@ import java.util.List;
 import io.github.chargerdefense.data.game.SavedGameState;
 import io.github.chargerdefense.model.enemy.Enemy;
 import io.github.chargerdefense.model.map.GameMap;
-import io.github.chargerdefense.model.unit.basic.BasicUnit;
 import io.github.chargerdefense.model.unit.upgrade.Upgrade;
 import io.github.chargerdefense.model.unit.Unit;
 
@@ -162,6 +161,11 @@ public class GameModel implements PlayerObserver {
 
         List<Projectile> newProjectiles = map.update(deltaTime, roundManager.getActiveEnemies());
         activeProjectiles.addAll(newProjectiles);
+
+        List<Enemy> activeEnemies = roundManager.getActiveEnemies();
+        for (Enemy enemy : activeEnemies) {
+            enemy.checkProjectileCollisions(activeProjectiles);
+        }
 
         Iterator<Projectile> iterator = activeProjectiles.iterator();
         while (iterator.hasNext()) {

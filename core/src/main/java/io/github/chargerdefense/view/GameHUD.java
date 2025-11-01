@@ -151,7 +151,8 @@ public class GameHUD implements GameObserver {
 		shopTitle.setFontScale(1.2f);
 		unitShopPanel.add(shopTitle).padTop(20).padBottom(20).row();
 
-		addUnitButton("Basic Unit", 100, "description");
+		addUnitButton("Basic Unit", 100, "Basic tower unit");
+		addUnitButton("Spike Factory", 150, "Produces spikes on ground");
 
 		stage.addActor(unitShopPanel);
 	}
