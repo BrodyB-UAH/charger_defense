@@ -5,6 +5,7 @@ import io.github.chargerdefense.model.Path;
 import io.github.chargerdefense.model.Projectile;
 import io.github.chargerdefense.model.enemy.Enemy;
 import io.github.chargerdefense.model.unit.Unit;
+import io.github.chargerdefense.model.unit.spike.SpikeFactoryUnit;
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -86,7 +87,16 @@ public abstract class GameMap {
         List<Projectile> newProjectiles = new ArrayList<>();
 
         for (Unit unit : placedUnits) {
-            Projectile projectile = unit.update(deltaTime, activeEnemies);
+            Projectile projectile;
+
+            // spike factory units need the path to be able to spawn spikes on it
+            if (unit instanceof SpikeFactoryUnit) {
+                projectile = ((SpikeFactoryUnit) unit)
+                        .update(deltaTime, activeEnemies, path);
+            } else {
+                projectile = unit.update(deltaTime, activeEnemies);
+            }
+
             if (projectile != null) {
                 newProjectiles.add(projectile);
             }

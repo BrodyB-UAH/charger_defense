@@ -3,6 +3,7 @@ package io.github.chargerdefense.model.unit.spike;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import io.github.chargerdefense.model.Path;
 import io.github.chargerdefense.model.Projectile;
 import io.github.chargerdefense.model.SpikeProjectile;
 import io.github.chargerdefense.model.enemy.Enemy;
@@ -47,19 +48,24 @@ public class SpikeFactoryUnit extends Unit {
 		this.upgradePath = new UpgradePath(upgrades);
 	}
 
+	@Override
+	public Projectile update(float deltaTime, List<Enemy> enemies) {
+		return update(deltaTime, enemies, null);
+	}
+
 	/**
-	 * Main update method that produces spikes periodically.
+	 * Update method with path parameter to be able to place spikes on the path.
 	 *
 	 * @param deltaTime The time elapsed since the last update (in seconds)
 	 * @param enemies   The list of all active enemies (unused for spike factory)
+	 * @param path      The path on which to place spikes
 	 * @return A new spike projectile if one was produced, null otherwise
 	 */
-	@Override
-	public Projectile update(float deltaTime, List<Enemy> enemies) {
+	public Projectile update(float deltaTime, List<Enemy> enemies, Path path) {
 		productionTimer -= deltaTime;
 
 		if (productionTimer <= 0) {
-			Projectile spike = produceSpike();
+			Projectile spike = produceSpike(path);
 			productionTimer = 1.0 / spikeProductionRate;
 			return spike;
 		}
@@ -68,24 +74,49 @@ public class SpikeFactoryUnit extends Unit {
 	}
 
 	/**
-	 * Produces a new spike at a random location within range.
+	 * Produces a new spike at a random location on the path within range.
 	 *
+	 * @param path The path on which to place the spike
 	 * @return A new SpikeProjectile
 	 */
-	private SpikeProjectile produceSpike() {
+	private SpikeProjectile produceSpike(Path path) {
 		Point unitPos = getPosition();
-		if (unitPos == null) {
+		if (unitPos == null || path == null) {
 			return null;
 		}
 
-		// place the spike at a random position within the range
-		double angle = Math.random() * 2 * Math.PI;
-		double distance = Math.random() * getRange() * 0.8;
+		// find points on the path
 
-		double spikeX = unitPos.x + Math.cos(angle) * distance;
-		double spikeY = unitPos.y + Math.sin(angle) * distance;
+		List<Point> pathPointsInRange = new ArrayList<>();
+		double rangeSq = getRange() * getRange();
 
-		Point.Double spikePosition = new Point.Double(spikeX, spikeY);
+		for (int i = 0; i < path.getLength() - 1; i++) {
+			Point start = path.getWaypoint(i);
+			Point end = path.getWaypoint(i + 1);
+
+			double segmentLength = start.distance(end);
+			int numSamples = (int) Math.max(2, segmentLength / 10);
+
+			for (int j = 0; j <= numSamples; j++) {
+				double t = j / (double) numSamples;
+				Point sample = new Point(
+						(int) (start.x + t * (end.x - start.x)),
+						(int) (start.y + t * (end.y - start.y)));
+
+				double distSq = unitPos.distanceSq(sample);
+				if (distSq <= rangeSq) {
+					pathPointsInRange.add(sample);
+				}
+			}
+		}
+
+		if (pathPointsInRange.isEmpty()) {
+			return null;
+		}
+
+		// pick a random point on the path to spawn a spike
+		Point targetPoint = pathPointsInRange.get((int) (Math.random() * pathPointsInRange.size()));
+		Point.Double spikePosition = new Point.Double(targetPoint.x, targetPoint.y);
 
 		SpikeProjectile spike = new SpikeProjectile(this, spikePosition, getDamage(), spikeLifetime, spikeMaxHits);
 
