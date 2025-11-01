@@ -15,6 +15,12 @@ public class Main extends Game {
     private StateManager stateManager;
 
     /**
+     * Constructs a new Main instance.
+     */
+    public Main() {
+    }
+
+    /**
      * Called when the application is created.
      * Initializes the state manager and shows the main menu as the starting screen.
      */

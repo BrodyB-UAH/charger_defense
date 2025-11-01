@@ -7,6 +7,7 @@ import com.badlogic.gdx.Gdx;
 
 import io.github.chargerdefense.data.ProfileManager;
 import io.github.chargerdefense.data.UserProfile;
+import io.github.chargerdefense.data.game.SavedGameState;
 
 /**
  * Model class for the main menu that manages profile selection and loading
@@ -21,6 +22,11 @@ public class MainMenuModel {
     private boolean isLoading;
     /** The currently loaded UserProfile object for the active profile */
     private UserProfile currentUserProfile;
+
+    /** List of available map names */
+    private List<String> availableMaps;
+    /** List of existing saved game states for the selected map */
+    private List<SavedGameState> existingSaves;
 
     /** Profile manager for handling JSON file operations */
     private final ProfileManager profileManager;
@@ -37,6 +43,17 @@ public class MainMenuModel {
         this.isLoading = false;
         this.profileManager = new ProfileManager();
         this.currentUserProfile = null;
+        this.availableMaps = new ArrayList<>();
+        this.existingSaves = new ArrayList<>();
+    }
+
+    /**
+     * Gets the profile manager for handling user profiles
+     * 
+     * @return The ProfileManager instance
+     */
+    public ProfileManager getProfileManager() {
+        return profileManager;
     }
 
     /**
@@ -182,14 +199,12 @@ public class MainMenuModel {
      */
     public boolean createNewProfile(String username) {
         if (username == null || username.trim().isEmpty()) {
-            Gdx.app.error("MainMenuModel", "Cannot create profile with empty username");
             return false;
         }
 
         String trimmedUsername = username.trim();
 
         if (profileManager.profileExists(trimmedUsername)) {
-            Gdx.app.error("MainMenuModel", "Profile already exists: " + trimmedUsername);
             return false;
         }
 
@@ -202,7 +217,6 @@ public class MainMenuModel {
 
             setActiveProfile(trimmedUsername);
 
-            Gdx.app.log("MainMenuModel", "Successfully created new profile: " + trimmedUsername);
             return true;
         } else {
             Gdx.app.error("MainMenuModel", "Failed to create profile: " + trimmedUsername);
@@ -219,7 +233,6 @@ public class MainMenuModel {
      */
     public boolean deleteProfile(String username) {
         if (username == null || username.trim().isEmpty()) {
-            Gdx.app.error("MainMenuModel", "Cannot delete profile with empty username");
             return false;
         }
 
@@ -234,8 +247,6 @@ public class MainMenuModel {
             }
 
             notifyProfilesLoaded();
-
-            Gdx.app.log("MainMenuModel", "Successfully deleted profile: " + trimmedUsername);
         } else {
             Gdx.app.error("MainMenuModel", "Failed to delete profile: " + trimmedUsername);
         }
@@ -251,17 +262,10 @@ public class MainMenuModel {
      */
     public boolean saveCurrentProfile() {
         if (currentUserProfile == null) {
-            Gdx.app.error("MainMenuModel", "No current profile to save");
             return false;
         }
 
         boolean saved = profileManager.saveProfile(currentUserProfile);
-        if (saved) {
-            Gdx.app.log("MainMenuModel", "Successfully saved current profile: " + currentUserProfile.getUsername());
-        } else {
-            Gdx.app.error("MainMenuModel", "Failed to save current profile: " + currentUserProfile.getUsername());
-        }
-
         return saved;
     }
 
@@ -274,33 +278,50 @@ public class MainMenuModel {
      */
     public boolean updateHighScore(String mapName, int score) {
         if (currentUserProfile == null) {
-            Gdx.app.error("MainMenuModel", "No active profile to update high score");
             return false;
         }
 
         boolean updated = currentUserProfile.updateHighScore(mapName, score);
         if (updated) {
             saveCurrentProfile();
-            Gdx.app.log("MainMenuModel", "New high score for " + mapName + ": " + score);
         }
 
         return updated;
     }
 
     /**
-     * Saves game data for a specific map in the current profile.
-     *
-     * @param mapName  The name of the map
-     * @param saveData The save data as a JSON string
+     * Gets the list of available map names
+     * 
+     * @return List of available map names
      */
-    public void saveGameData(String mapName, String saveData) {
-        if (currentUserProfile == null) {
-            Gdx.app.error("MainMenuModel", "No active profile to save game data");
-            return;
-        }
+    public List<String> getAvailableMaps() {
+        return availableMaps;
+    }
 
-        currentUserProfile.saveGameData(mapName, saveData);
-        saveCurrentProfile();
-        Gdx.app.log("MainMenuModel", "Saved game data for map: " + mapName);
+    /**
+     * Sets the list of available map names
+     * 
+     * @param availableMaps List of available map names
+     */
+    public void setAvailableMaps(List<String> availableMaps) {
+        this.availableMaps = availableMaps;
+    }
+
+    /**
+     * Gets the list of existing saved game states for the selected map
+     * 
+     * @return List of existing saved game states
+     */
+    public List<SavedGameState> getExistingSaves() {
+        return existingSaves;
+    }
+
+    /**
+     * Sets the list of existing saved game states for the selected map
+     * 
+     * @param existingSaves List of existing saved game states
+     */
+    public void setExistingSaves(List<SavedGameState> existingSaves) {
+        this.existingSaves = existingSaves;
     }
 }

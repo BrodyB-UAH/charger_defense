@@ -3,6 +3,9 @@ package io.github.chargerdefense.data;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.badlogic.gdx.utils.Json;
+
+import io.github.chargerdefense.data.game.SavedGameState;
 import io.github.chargerdefense.model.MapState;
 
 /**
@@ -19,6 +22,12 @@ public class UserProfile {
 	private long createdTimestamp;
 	/** The timestamp when this profile was last accessed */
 	private long lastAccessedTimestamp;
+
+	/**
+	 * JSON serializer/deserializer; marked as transient because the class is
+	 * directly passed to the JSON library for deserialization
+	 */
+	private transient final Json json = new Json();
 
 	/**
 	 * Default constructor for JSON deserialization.
@@ -144,12 +153,28 @@ public class UserProfile {
 	 * Saves game data for a specific map.
 	 *
 	 * @param mapName  The name of the map
-	 * @param saveData The save data as a JSON string
+	 * @param saveData The save data to store
 	 */
-	public void saveGameData(String mapName, String saveData) {
+	public void saveGameData(String mapName, SavedGameState saveData) {
 		MapState mapState = getMapState(mapName);
-		mapState.setLastSaveData(saveData);
+		mapState.setLastSaveData(json.toJson(saveData));
 		mapState.setLastPlayedTimestamp(System.currentTimeMillis());
+	}
+
+	/**
+	 * Loads game data for a specific map.
+	 *
+	 * @param mapName The name of the map
+	 * @return The loaded game data, or null if no save data exists
+	 */
+	public SavedGameState loadGameData(String mapName) {
+		MapState mapState = getMapState(mapName);
+		String saveData = mapState.getLastSaveData();
+		if (saveData == null || saveData.trim().isEmpty()) {
+			return null;
+		}
+
+		return json.fromJson(SavedGameState.class, saveData);
 	}
 
 	/**

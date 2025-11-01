@@ -4,14 +4,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import io.github.chargerdefense.data.game.SavedGameState;
+import io.github.chargerdefense.data.game.SavedUnit;
 import io.github.chargerdefense.model.enemy.Enemy;
 import io.github.chargerdefense.model.map.GameMap;
+import io.github.chargerdefense.model.unit.upgrade.Upgrade;
 import io.github.chargerdefense.model.unit.Unit;
+import io.github.chargerdefense.model.unit.basic.BasicUnit;
 
 /**
  * Manages the main game loop, game state, and core components.
  */
-public class GameModel {
+public class GameModel implements PlayerObserver {
     /** The player in the game. */
     private Player player;
     /** The game map. */
@@ -24,6 +28,10 @@ public class GameModel {
     private boolean isGameOver;
     /** A list of all active projectiles in the game. */
     private List<Projectile> activeProjectiles;
+    /** List of observers for game state changes. */
+    private List<GameObserver> observers;
+    /** The currently selected unit for actions. */
+    private Unit selectedUnit;
 
     /**
      * Constructs a new Game instance.
@@ -35,11 +43,130 @@ public class GameModel {
      */
     public GameModel(int initialLives, int initialCurrency, GameMap map, List<Round> rounds) {
         this.player = new Player(initialCurrency);
+        this.player.addObserver(this);
         this.map = map;
         this.lives = initialLives;
         this.roundManager = new RoundManager(rounds, this);
         this.isGameOver = false;
         this.activeProjectiles = new ArrayList<>();
+        this.observers = new ArrayList<>();
+    }
+
+    /**
+     * Constructs a new Game instance from a saved game state.
+     * 
+     * @param savedGame The saved game state to load.
+     * @param map       The game map to be used.
+     * @param rounds    A list of predefined rounds for the game.
+     */
+    public GameModel(SavedGameState savedGame, GameMap map, List<Round> rounds) {
+        this.player = new Player(savedGame.currency);
+        this.player.addObserver(this);
+        this.player.setScore(savedGame.score);
+        this.player.setEnemiesDefeated(savedGame.enemiesDefeated);
+        this.player.setUnitsPurchased(savedGame.unitsPurchased);
+
+        this.map = map;
+        this.lives = savedGame.lives;
+
+        for (SavedUnit savedUnit : savedGame.placedUnits) {
+            Unit unit = createUnitFromSerializedType(savedUnit.type);
+            if (unit != null) {
+                this.map.placeUnit(unit, savedUnit.x, savedUnit.y);
+            }
+        }
+
+        this.roundManager = new RoundManager(rounds, this);
+        this.roundManager.setCurrentRoundIndex(savedGame.currentRoundIndex);
+
+        this.isGameOver = false;
+        this.activeProjectiles = new ArrayList<>();
+        this.observers = new ArrayList<>();
+    }
+
+    /**
+     * Creates a unit instance from the serialized unit type name.
+     * 
+     * @param unitType The name/type of the unit
+     * @return A new unit instance, or null if the type is invalid
+     */
+    private Unit createUnitFromSerializedType(String unitType) {
+        switch (unitType) {
+            case "BasicUnit":
+                return new BasicUnit();
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Adds an observer to receive game state notifications.
+     *
+     * @param observer The observer to add
+     */
+    public void addObserver(GameObserver observer) {
+        observers.add(observer);
+    }
+
+    /**
+     * Removes an observer from the list of observers.
+     *
+     * @param observer The observer to remove
+     */
+    public void removeObserver(GameObserver observer) {
+        observers.remove(observer);
+    }
+
+    /**
+     * Notifies all observers that currency has changed.
+     */
+    private void notifyCurrencyChanged() {
+        int currency = player.getCurrency();
+        for (GameObserver observer : observers) {
+            observer.onCurrencyChanged(currency);
+        }
+    }
+
+    /**
+     * Notifies all observers that lives have changed.
+     */
+    private void notifyLivesChanged() {
+        for (GameObserver observer : observers) {
+            observer.onLivesChanged(lives);
+        }
+    }
+
+    /**
+     * Notifies all observers that the round has changed.
+     */
+    private void notifyRoundChanged() {
+        int currentRound = roundManager.getCurrentRoundNumber();
+        int totalRounds = roundManager.getTotalRounds();
+        for (GameObserver observer : observers) {
+            observer.onRoundChanged(currentRound, totalRounds);
+        }
+    }
+
+    /**
+     * Notifies all observers that the round state has changed.
+     */
+    private void notifyRoundStateChanged() {
+        boolean roundInProgress = roundManager.isRoundInProgress();
+        boolean allRoundsComplete = roundManager.areAllRoundsCompleted();
+        for (GameObserver observer : observers) {
+            observer.onRoundStateChanged(roundInProgress, allRoundsComplete);
+        }
+    }
+
+    /**
+     * Notifies all observers that the game is over.
+     *
+     * @param victory true if the player won, false if they lost
+     */
+    private void notifyGameOver(boolean victory) {
+        for (GameObserver observer : observers) {
+            observer.onGameOver(victory);
+        }
     }
 
     /**
@@ -52,10 +179,23 @@ public class GameModel {
         if (isGameOver)
             return;
 
+        boolean wasRoundInProgress = roundManager.isRoundInProgress();
+
         roundManager.update(deltaTime);
+
+        // notify if the round state changed
+        boolean isRoundInProgress = roundManager.isRoundInProgress();
+        if (wasRoundInProgress != isRoundInProgress) {
+            notifyRoundStateChanged();
+        }
 
         List<Projectile> newProjectiles = map.update(deltaTime, roundManager.getActiveEnemies());
         activeProjectiles.addAll(newProjectiles);
+
+        List<Enemy> activeEnemies = roundManager.getActiveEnemies();
+        for (Enemy enemy : activeEnemies) {
+            enemy.checkProjectileCollisions(activeProjectiles);
+        }
 
         Iterator<Projectile> iterator = activeProjectiles.iterator();
         while (iterator.hasNext()) {
@@ -76,6 +216,7 @@ public class GameModel {
      */
     public void enemyReachedEnd(Enemy enemy) {
         this.lives -= 1;
+        notifyLivesChanged();
         roundManager.onEnemyReachedEnd(enemy);
     }
 
@@ -85,18 +226,25 @@ public class GameModel {
      */
     public void startNextRound() {
         roundManager.startNextRound();
+        notifyRoundChanged();
+        notifyRoundStateChanged();
     }
 
     /**
      * Checks for the game's win or loss conditions.
+     * When the player has no more lives, the game is lost. If the player completes
+     * all rounds, and they still have lives, the game is won. If both of these
+     * conditions are not true, then the game is still in-progress.
      */
     private void checkGameOver() {
         if (lives <= 0) {
             isGameOver = true;
+            notifyGameOver(false);
         }
 
-        if (roundManager.areAllRoundsCompleted()) {
+        if (roundManager.areAllRoundsCompleted() && !isGameOver) {
             isGameOver = true;
+            notifyGameOver(true);
         }
     }
 
@@ -189,6 +337,7 @@ public class GameModel {
      */
     public void setLives(int lives) {
         this.lives = Math.max(0, lives);
+        notifyLivesChanged();
     }
 
     /**
@@ -216,5 +365,46 @@ public class GameModel {
      */
     public RoundManager getRoundManager() {
         return roundManager;
+    }
+
+    /**
+     * Gets the currently selected unit.
+     * 
+     * @return The selected unit, or null if none is selected
+     */
+    public Unit getSelectedUnit() {
+        return selectedUnit;
+    }
+
+    /**
+     * Sets the currently selected unit.
+     * 
+     * @param unit The unit to select, or null to clear selection
+     */
+    public void setSelectedUnit(Unit unit) {
+        if (this.selectedUnit != null) {
+            this.selectedUnit.setSelected(false);
+        }
+        this.selectedUnit = unit;
+        if (this.selectedUnit != null) {
+            this.selectedUnit.setSelected(true);
+        }
+    }
+
+    /** Upgrades the currently selected unit, if applicable. */
+    public void upgradeSelectedUnit() {
+        if (selectedUnit != null) {
+            Upgrade nextUpgrade = selectedUnit.getUpgradePath()
+                    .getNextUpgrade();
+            if (nextUpgrade != null && player.canAfford(nextUpgrade.getCost())) {
+                player.spendCurrency(nextUpgrade.getCost());
+                selectedUnit.applyUpgrade();
+            }
+        }
+    }
+
+    @Override
+    public void onCurrencyChanged(int newCurrency) {
+        notifyCurrencyChanged();
     }
 }

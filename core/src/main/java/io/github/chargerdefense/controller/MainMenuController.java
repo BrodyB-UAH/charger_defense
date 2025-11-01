@@ -1,8 +1,15 @@
 package io.github.chargerdefense.controller;
 
 import com.badlogic.gdx.Gdx;
+import io.github.chargerdefense.data.ProfileManager;
+import io.github.chargerdefense.data.UserProfile;
+import io.github.chargerdefense.data.game.SavedGameState;
 import io.github.chargerdefense.model.MainMenuModel;
+import io.github.chargerdefense.model.MapState;
 import io.github.chargerdefense.model.map.GameMap;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Controller for the main menu that handles user interactions and coordinates
@@ -28,13 +35,67 @@ public class MainMenuController {
     }
 
     /**
-     * Handles the play button click event.
-     * Starts the game by transitioning to the game screen.
+     * Gets the main menu model for managing menu state
      * 
-     * @param map The game map to use for this game instance.
+     * @return The MainMenuModel instance
      */
-    public void onPlayClicked(GameMap map) {
-        stateManager.startGame(map);
+    public MainMenuModel getMainMenuModel() {
+        return model;
+    }
+
+    /**
+     * Handles the play button click event.
+     * Transitions to the map selection screen.
+     */
+    public void onPlayClicked() {
+        stateManager.showMapSelection();
+    }
+
+    /**
+     * Handles the new game button click from map selection.
+     * Starts a new game with the selected map.
+     *
+     * @param map The selected game map
+     */
+    public void onNewGameClicked(GameMap map) {
+        stateManager.startGame(map, null);
+    }
+
+    /**
+     * Handles loading an existing save from map selection.
+     * Loads the game state and starts the game.
+     *
+     * @param map       The game map
+     * @param savedGame The saved game state to load
+     */
+    public void onLoadSaveClicked(GameMap map, SavedGameState savedGame) {
+        stateManager.startGame(map, savedGame);
+    }
+
+    /**
+     * Loads existing saves for the specified map into the map selection model.
+     * 
+     * @param mapName The name of the map to load saves for
+     */
+    public void loadSavesForMap(String mapName) {
+        List<SavedGameState> saves = new ArrayList<>();
+        ProfileManager profileManager = model.getProfileManager();
+        List<String> profileNames = profileManager.getAllProfileNames();
+
+        for (String profileName : profileNames) {
+            UserProfile profile = profileManager.loadProfileData(profileName);
+            if (profile != null) {
+                MapState mapState = profile.getMapState(mapName);
+                if (mapState.hasSaveData()) {
+                    SavedGameState savedGame = profile.loadGameData(mapName);
+                    if (savedGame != null) {
+                        savedGame.profileName = profileName;
+                        saves.add(savedGame);
+                    }
+                }
+            }
+        }
+        model.setExistingSaves(saves);
     }
 
     /**
@@ -48,10 +109,18 @@ public class MainMenuController {
 
     /**
      * Handles the profile button click event.
-     * Initiates the process of loading available profiles.
+     * Transitions to the profile selection screen.
      */
-    public void onProfileClicked() {
-        model.checkForProfiles();
+    public void onProfileSelectionClicked() {
+        stateManager.showProfileSelection();
+    }
+
+    /**
+     * Handles back button clicks.
+     * Returns to the main menu.
+     */
+    public void onBackClicked() {
+        stateManager.showMainMenu();
     }
 
     /**
