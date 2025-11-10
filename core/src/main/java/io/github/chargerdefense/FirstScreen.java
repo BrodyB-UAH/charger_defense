@@ -11,6 +11,18 @@ public class FirstScreen implements Screen {
     @Override
     public void show() {
         // Prepare your screen here.
+
+        // Example usage demonstrating the API requested by the professor:
+        // create a model and HUD, register the HUD as an observer, then set lives to 100.
+        GameModel model = new GameModel();
+        GameHud hud = new GameHud();
+        model.addObserver(hud);
+
+        // This call shows that other code can set lives to 100:
+        model.setLives(100);
+
+        // The hud.onLivesChanged(100) will be invoked by the model and the HUD should update accordingly.
+        Gdx.app.log("FirstScreen", "Requested setLives(100) on GameModel.");
     }
 
     @Override
