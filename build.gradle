@@ -15,13 +15,6 @@ buildscript {
 allprojects {
   apply plugin: 'eclipse'
   apply plugin: 'idea'
-  apply plugin: 'java-library'
-
-  java {
-    toolchain {
-      languageVersion = JavaLanguageVersion.of(21)
-    }
-  }
 
   // This allows you to "Build and run using IntelliJ IDEA", an option in IDEA's Settings.
   idea {
@@ -34,6 +27,7 @@ allprojects {
 
 configure(subprojects) {
   apply plugin: 'java-library'
+  sourceCompatibility = 21
 
   // From https://lyze.dev/2021/04/29/libGDX-Internal-Assets-List/
   // The article can be helpful when using assets.txt in your project.
