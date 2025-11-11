@@ -1,11 +1,32 @@
 package io.github.chargerdefense;
 
 import com.badlogic.gdx.Game;
+import io.github.chargerdefense.controller.StateManager;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
+/**
+ * Extends libGDX's Game class to manage the overall application
+ * lifecycle and coordinates with the StateManager to handle different game
+ * screens.
+ */
 public class Main extends Game {
+    /**
+     * The state manager responsible for coordinating between different game screens
+     */
+    private StateManager stateManager;
+
+    /**
+     * Constructs a new Main instance.
+     */
+    public Main() {
+    }
+
+    /**
+     * Called when the application is created.
+     * Initializes the state manager and shows the main menu as the starting screen.
+     */
     @Override
     public void create() {
-        setScreen(new FirstScreen());
+        stateManager = new StateManager(this);
+        stateManager.showMainMenu();
     }
 }

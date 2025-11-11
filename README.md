@@ -1,33 +1,23 @@
 # ChargerDefense
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+## Instructions
 
-This project was generated with a template including simple application launchers and a main class extending `Game` that sets the first screen.
+- In NetBeans, open the `charger_defense` project
+  - There might be a prompt about Project Problems; click `Resolve Problems...` -> `Resolve...` (NetBeans says that Gradle scripts need to be executed for project setup)
+- Open the `charger_defense:lwjgl3` project by going to `charger_defense` -> `Sub Projects` -> `lwjgl3` from the NetBeans project explorer view
+  - Right click on `lwjgl3` and select Open Project
+- Right click the `charger_defense:lwjgl3` project and select `Run`
+- If it doesn't work, the program can be run through `.\gradlew.bat lwjgl3:run` or `./gradlew lwjgl3:run`
+
+### Usage
+
+- The Play button will initially be disabled because a profile must be selected
+- Create a profile from the Profile Selection view, select it, and go back to the main menu
+- Press the Play button, select a map, and press play
+- Click the arrow button on the right and purchase the unit by clicking Buy and clicking on a valid spot on the map near the path (when the indicator is green)
+- Click Start Round in the top right
 
 ## Platforms
 
 - `core`: Main module with the application logic shared by all platforms.
 - `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
-
-## Gradle
-
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
-
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
-
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
