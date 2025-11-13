@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.PlayerObserver;
 import io.github.chargerdefense.model.unit.Unit;
+import io.github.chargerdefense.model.unit.Unit.TargetingMode;
 import io.github.chargerdefense.model.unit.upgrade.Upgrade;
 
 /**
@@ -25,6 +26,8 @@ public class UpgradeMenuView extends Table implements PlayerObserver {
     private Label costLabel;
     /** The button to confirm the upgrade. */
     private TextButton upgradeButton;
+    /** The button to cycle through target priorities. */
+    private TextButton targetPriorityButton;
     /** The currently displayed upgrade option. */
     private Upgrade currentUpgrade;
 
@@ -43,16 +46,49 @@ public class UpgradeMenuView extends Table implements PlayerObserver {
         upgradeDescriptionLabel = new Label("", skin);
         costLabel = new Label("", skin);
         upgradeButton = new TextButton("Upgrade", skin);
+    targetPriorityButton = new TextButton("Target Priority: First", skin);
 
-        add(upgradeNameLabel).row();
-        add(upgradeDescriptionLabel).row();
-        add(costLabel).row();
-        add(upgradeButton);
+        // Slightly reduce label font sizes to make menu more compact
+        upgradeNameLabel.setFontScale(0.95f);
+        upgradeDescriptionLabel.setFontScale(0.92f);
+        costLabel.setFontScale(0.9f);
+
+        // Use a nested table for the buttons so they share the same parent and sizing
+        float buttonWidth = 150f;
+        float buttonHeight = 36f;
+        float buttonSpacing = 6f;
+
+        // Keep button font scale consistent and balanced with labels
+        upgradeButton.getLabel().setFontScale(0.95f);
+        targetPriorityButton.getLabel().setFontScale(0.95f);
+
+        // Center descriptive text across two columns so it's visually between both buttons
+        add(upgradeNameLabel).colspan(2).center().row();
+        add(upgradeDescriptionLabel).colspan(2).center().row();
+        add(costLabel).colspan(2).center().padBottom(6).row();
+
+        // Button row grouped in a nested table to ensure same size and spacing
+        Table buttonRow = new Table();
+        buttonRow.add(upgradeButton).width(buttonWidth).height(buttonHeight).padRight(buttonSpacing);
+        buttonRow.add(targetPriorityButton).width(buttonWidth).height(buttonHeight);
+
+        add(buttonRow).colspan(2).center().row();
 
         upgradeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.upgradeSelectedUnit();
+            }
+        });
+
+        targetPriorityButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                Unit selectedUnit = game.getSelectedUnit();
+                if (selectedUnit != null) {
+                    selectedUnit.cycleTargetMode();
+                    updateTargetPriorityButton(selectedUnit);
+                }
             }
         });
 
@@ -78,9 +114,20 @@ public class UpgradeMenuView extends Table implements PlayerObserver {
             } else {
                 setVisible(false);
             }
+            updateTargetPriorityButton(selectedUnit);
         } else {
             setVisible(false);
         }
+    }
+
+    /**
+     * Updates the target priority button text to reflect the current targeting mode.
+     * 
+     * @param unit The selected unit to get the targeting mode from.
+     */
+    private void updateTargetPriorityButton(Unit unit) {
+        TargetingMode mode = unit.getTargetMode();
+        targetPriorityButton.setText("Target Priority: " + mode.getDisplayName());
     }
 
     @Override

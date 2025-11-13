@@ -3,9 +3,12 @@ package io.github.chargerdefense.view;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -19,6 +22,7 @@ import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.Projectile;
 import io.github.chargerdefense.model.enemy.Enemy;
 import io.github.chargerdefense.model.unit.Unit;
+import io.github.chargerdefense.model.unit.basic.BasicUnit;
 
 import java.util.List;
 
@@ -42,6 +46,12 @@ public class GameView implements Screen {
     private final OrthographicCamera camera;
     /** The viewport for handling screen resizing with proper aspect ratio */
     private final Viewport viewport;
+    /** The asset manager for loading game assets */
+    private final AssetManager assetManager;
+    /** The sprite texture for enemies */
+    private TextureRegion enemySprite;
+    /** The sprite texture for basic tower units */
+    private TextureRegion towerSprite;
 
     /**
      * Constructs a new GameView with the specified state manager and game model.
@@ -55,11 +65,42 @@ public class GameView implements Screen {
         this.shapeRenderer = new ShapeRenderer();
         this.controller = gameManager.getGameController();
         this.hud = new GameHUD(game, controller);
+        this.assetManager = new AssetManager();
 
         // for scaling
         this.camera = new OrthographicCamera();
         this.camera.setToOrtho(false, GameConstants.GAME_WIDTH, GameConstants.GAME_HEIGHT);
         this.viewport = new FitViewport(GameConstants.GAME_WIDTH, GameConstants.GAME_HEIGHT, camera);
+        
+        // Load assets
+        loadAssets();
+    }
+
+    /**
+     * Loads all game assets including textures and sprites.
+     */
+    private void loadAssets() {
+        assetManager.load("enemies/mushroom_black.png", Texture.class);
+        assetManager.load("towers/charger_blue_sprite.png", Texture.class);
+        assetManager.finishLoading();
+        
+        Texture enemyTexture = assetManager.get("enemies/mushroom_black.png", Texture.class);
+        this.enemySprite = new TextureRegion(enemyTexture);
+        
+        Texture towerTexture = assetManager.get("towers/charger_blue_sprite.png", Texture.class);
+        this.towerSprite = new TextureRegion(towerTexture);
+        
+        // Apply sprite to all enemies
+        game.getRoundManager().setEnemySprite(enemySprite);
+        
+        // Set default sprite for BasicUnit class so future instances get it
+        BasicUnit.setDefaultSprite(towerSprite);
+        // Apply sprite to already placed BasicUnit instances only
+        for (Unit unit : game.getMap().getPlacedUnits()) {
+            if (unit instanceof BasicUnit) {
+                unit.setSprite(towerSprite);
+            }
+        }
     }
 
     /**
@@ -122,12 +163,7 @@ public class GameView implements Screen {
 
         List<Unit> units = game.getMap().getPlacedUnits();
         for (Unit unit : units) {
-            unit.render(shapeRenderer);
-        }
-
-        List<Enemy> enemies = game.getRoundManager().getActiveEnemies();
-        for (Enemy enemy : enemies) {
-            enemy.render(shapeRenderer);
+            unit.renderOverlay(shapeRenderer);
         }
 
         List<Projectile> projectiles = game.getActiveProjectiles();
@@ -139,9 +175,42 @@ public class GameView implements Screen {
 
         shapeRenderer.end();
 
+        // Render unit and enemy sprites
         batch.begin();
-        // TODO render sprites/textures here if needed
+        for (Unit unit : units) {
+            unit.renderSprite(batch);
+        }
+        List<Enemy> enemies = game.getRoundManager().getActiveEnemies();
+        for (Enemy enemy : enemies) {
+            enemy.renderSprite(batch);
+        }
+
+        // Draw placement preview sprite (if any) here so we can use SpriteBatch tint/alpha
+        Unit previewUnit = controller.getPreviewUnit();
+        if (previewUnit != null && controller.getSelectedUnitType() != null) {
+            java.awt.Point.Float mousePos = controller.getMousePosition();
+            float gameX = mousePos.x;
+            float gameY = mousePos.y;
+
+            boolean isValid = game.getMap().isPlacementValid((int) gameX, (int) gameY);
+
+            if (previewUnit instanceof BasicUnit && towerSprite != null) {
+                // Use the shared tower size constant for preview
+                float previewSize = io.github.chargerdefense.GameConstants.TOWER_SIZE;
+                float alpha = isValid ? 0.8f : 0.5f;
+                batch.setColor(1f, 1f, 1f, alpha);
+                batch.draw(towerSprite, gameX - previewSize / 2, gameY - previewSize / 2, previewSize, previewSize);
+                batch.setColor(1f, 1f, 1f, 1f);
+            }
+        }
         batch.end();
+
+        // Render enemy health bars
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        for (Enemy enemy : enemies) {
+            enemy.renderHealthBar(shapeRenderer);
+        }
+        shapeRenderer.end();
 
         // render game HUD on top of game view
         hud.update(delta);
@@ -172,14 +241,9 @@ public class GameView implements Screen {
             float range = (float) previewUnit.getRange();
             shapeRenderer.circle(gameX, gameY, range);
 
-            // unit preview
-            if (isValid) {
-                shapeRenderer.setColor(0.3f, 0.8f, 0.3f, 0.7f);
-            } else {
-                shapeRenderer.setColor(0.8f, 0.3f, 0.3f, 0.7f);
-            }
-            float size = 16.0f;
-            shapeRenderer.rect(gameX - size / 2, gameY - size / 2, size, size);
+            // unit preview (sprite will be drawn later during the SpriteBatch phase)
+            // We keep only the range indicator here and draw the sprite preview in the
+            // batch section so it can be rendered with transparency and the correct sprite.
         }
     }
 

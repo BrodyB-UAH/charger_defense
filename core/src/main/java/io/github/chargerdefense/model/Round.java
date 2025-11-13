@@ -1,5 +1,7 @@
 package io.github.chargerdefense.model;
 
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
 import io.github.chargerdefense.model.enemy.Enemy;
 
 import java.util.ArrayList;
@@ -10,6 +12,9 @@ import java.util.List;
  * and manages their spawning and state.
  */
 public class Round {
+    /** Interval (in seconds) between spawning subsequent enemies. */
+    private static final float SPAWN_INTERVAL = 4.0f;
+
     /** A list of all enemies that will be spawned during this round. */
     private List<Enemy> enemiesToSpawn;
     /** A list of enemies that are currently active on the map. */
@@ -37,6 +42,7 @@ public class Round {
 
     /**
      * Prepares the round to begin.
+     * Spawns the first enemy immediately, then subsequent enemies spawn every SPAWN_INTERVAL seconds.
      * 
      * @param gameModel The main game object for callbacks.
      */
@@ -45,8 +51,22 @@ public class Round {
         this.spawnIndex = 0;
         this.enemiesDefeated = 0;
         this.enemiesEscaped = 0;
+        this.spawnTimer = 0;
+        
         for (Enemy enemy : enemiesToSpawn) {
             enemy.reset(gameModel);
+            // Halve health for round 1 only
+            if (gameModel.getRoundManager().getCurrentRoundNumber() == 1) {
+                double currentHealth = enemy.getHealth();
+                enemy.setHealth(currentHealth / 2);
+            }
+        }
+        
+        // Spawn the first enemy immediately
+        if (enemiesToSpawn.size() > 0) {
+            Enemy firstEnemy = enemiesToSpawn.get(spawnIndex++);
+            activeEnemies.add(firstEnemy);
+            spawnTimer = 0;  // Next enemy will spawn after SPAWN_INTERVAL seconds
         }
     }
 
@@ -56,9 +76,9 @@ public class Round {
      * @param deltaTime The time elapsed since the last update (in seconds)
      */
     public void update(float deltaTime) {
-        // for now, spawn one enemy per 0.5s
+        // Spawn remaining enemies every SPAWN_INTERVAL seconds
         spawnTimer += deltaTime;
-        if (spawnTimer >= 0.5 && spawnIndex < enemiesToSpawn.size()) {
+        if (spawnTimer >= SPAWN_INTERVAL && spawnIndex < enemiesToSpawn.size()) {
             Enemy enemy = enemiesToSpawn.get(spawnIndex++);
             activeEnemies.add(enemy);
             spawnTimer = 0;
@@ -129,5 +149,19 @@ public class Round {
     public void onEnemyReachedEnd(Enemy enemy) {
         enemiesEscaped += 1;
         // Enemy is removed in update()
+    }
+
+    /**
+     * Sets the sprite texture for all enemies in this round.
+     *
+     * @param sprite The TextureRegion to apply to all enemies
+     */
+    public void setEnemySprite(TextureRegion sprite) {
+        for (Enemy enemy : enemiesToSpawn) {
+            enemy.setSprite(sprite);
+        }
+        for (Enemy enemy : activeEnemies) {
+            enemy.setSprite(sprite);
+        }
     }
 }

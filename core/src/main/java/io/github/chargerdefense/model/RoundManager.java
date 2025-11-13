@@ -1,5 +1,7 @@
 package io.github.chargerdefense.model;
 
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
 import io.github.chargerdefense.model.enemy.Enemy;
 
 import java.util.ArrayList;
@@ -140,5 +142,22 @@ public class RoundManager {
      */
     public void setCurrentRoundIndex(int currentRoundIndex) {
         this.currentRoundIndex = currentRoundIndex;
+    }
+
+    /**
+     * Sets the sprite texture for all enemies in all rounds.
+     *
+     * @param sprite The TextureRegion to apply to all enemies
+     */
+    public void setEnemySprite(TextureRegion sprite) {
+        for (Round round : allRounds) {
+            round.setEnemySprite(sprite);
+        }
+        // Also set on any currently active enemies
+        if (currentRound != null) {
+            for (Enemy enemy : currentRound.getActiveEnemies()) {
+                enemy.setSprite(sprite);
+            }
+        }
     }
 }

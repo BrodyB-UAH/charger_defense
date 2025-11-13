@@ -19,6 +19,15 @@ public final class GameConstants {
 	/** The minimum distance from the path required for unit placement. */
 	public static final int MIN_PATH_DISTANCE = 48;
 
+	/** Standard sprite size (width and height) used for towers and enemies. */
+	public static final float SPRITE_SIZE = 50.0f;
+
+	/** Tower render size (width and height) for consistent sprite display. */
+	public static final float TOWER_SIZE = 90.0f;
+
+	/** Vertical offset for enemy health bars to position them above the sprite. */
+	public static final float HEALTH_BAR_OFFSET = 55.0f;
+
 	private GameConstants() {
 	}
 }

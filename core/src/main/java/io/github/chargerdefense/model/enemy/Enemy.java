@@ -1,11 +1,14 @@
 package io.github.chargerdefense.model.enemy;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.Path;
 import io.github.chargerdefense.model.Projectile;
+import io.github.chargerdefense.GameConstants;
 
 import java.awt.Point;
 
@@ -40,6 +43,8 @@ public abstract class Enemy {
     private boolean isDead = false;
     /** Reference to the game model for handling enemy events. */
     private GameModel gameModel;
+    /** The sprite texture for rendering the enemy. */
+    private TextureRegion sprite;
 
     /**
      * Constructs an Enemy.
@@ -209,6 +214,44 @@ public abstract class Enemy {
     }
 
     /**
+     * Gets the path progress of the enemy.
+     * Higher values indicate enemies further along the path.
+     *
+     * @return The current path waypoint index
+     */
+    public int getPathIndex() {
+        return pathIndex;
+    }
+
+    /**
+     * Gets the current health of the enemy.
+     *
+     * @return The current health value
+     */
+    public double getHealth() {
+        return health;
+    }
+
+    /**
+     * Sets the health of the enemy and updates the initial health accordingly.
+     *
+     * @param newHealth The new health value
+     */
+    public void setHealth(double newHealth) {
+        this.initialHealth = newHealth;
+        this.health = newHealth;
+    }
+
+    /**
+     * Sets the sprite texture for rendering the enemy.
+     *
+     * @param sprite The TextureRegion to use for rendering
+     */
+    public void setSprite(TextureRegion sprite) {
+        this.sprite = sprite;
+    }
+
+    /**
      * Checks if the enemy is camouflaged.
      *
      * @return true if the enemy is camouflaged, false otherwise
@@ -222,20 +265,37 @@ public abstract class Enemy {
      *
      * @param shapeRenderer The shape renderer to use for drawing
      */
-    public void render(ShapeRenderer shapeRenderer) {
+    /**
+     * Renders the enemy sprite.
+     *
+     * @param batch The SpriteBatch for drawing the sprite
+     */
+    public void renderSprite(SpriteBatch batch) {
         if (position == null || isDead) {
             return;
         }
 
-        float radius = 8.0f;
+        // Draw sprite
+        if (sprite != null) {
+            float spriteSize = GameConstants.SPRITE_SIZE;
+            batch.draw(sprite, position.x - spriteSize / 2, position.y - spriteSize / 2, spriteSize, spriteSize);
+        }
+    }
 
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.circle(position.x, position.y, radius);
+    /**
+     * Renders the enemy's health bar.
+     *
+     * @param shapeRenderer The ShapeRenderer for drawing the health bar
+     */
+    public void renderHealthBar(ShapeRenderer shapeRenderer) {
+        if (position == null || isDead) {
+            return;
+        }
 
-        // health bar
+        // Draw health bar
         float healthBarWidth = 20.0f;
         float healthBarHeight = 3.0f;
-        float healthBarY = position.y + radius + 5.0f;
+        float healthBarY = position.y + GameConstants.HEALTH_BAR_OFFSET;
         float healthPercentage = (float) (health / initialHealth);
 
         // background
@@ -246,5 +306,16 @@ public abstract class Enemy {
         shapeRenderer.setColor(Color.GREEN);
         shapeRenderer.rect(position.x - healthBarWidth / 2, healthBarY, healthBarWidth * healthPercentage,
                 healthBarHeight);
+    }
+
+    /**
+     * Renders the enemy sprite and health bar (legacy method for compatibility).
+     *
+     * @param batch The SpriteBatch for drawing the sprite
+     * @param shapeRenderer The ShapeRenderer for drawing the health bar
+     */
+    public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
+        renderSprite(batch);
+        renderHealthBar(shapeRenderer);
     }
 }
