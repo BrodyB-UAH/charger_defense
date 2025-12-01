@@ -17,6 +17,11 @@
 - Click the arrow button on the right and purchase the unit by clicking Buy and clicking on a valid spot on the map near the path (when the indicator is green)
 - Click Start Round in the top right
 
+### Distribution
+
+- Run `.\gradlew.bat lwjgl3:dist`
+- The program will be bundled into `.\lwjgl3\build\libs\*.jar`
+
 ## Platforms
 
 - `core`: Main module with the application logic shared by all platforms.
