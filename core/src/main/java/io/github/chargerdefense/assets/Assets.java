@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public class Assets {
 	private static Assets instance;
 	private final AssetManager assetManager;
+	private boolean assetsLoaded = false;
 
 	// Cached sprites
 	private TextureRegion enemySprite;
@@ -48,9 +49,14 @@ public class Assets {
 	 * Should be called once at game startup.
 	 */
 	public void loadAssets() {
+		// prevent loading assets multiple times
+		if (assetsLoaded) {
+			return;
+		}
+
 		assetManager.load("enemies/mushroom_black.png", Texture.class);
 		assetManager.load("enemies/mushroom_camo.png", Texture.class);
-		assetManager.load("towers/charger_blue_sprite.png", Texture.class);
+		assetManager.load("towers/Charger_Blue_Sprite.png", Texture.class);
 		assetManager.load("towers/spike_factory_base.png", Texture.class);
 		assetManager.load("towers/spike_factory_thorn.png", Texture.class);
 		assetManager.load("towers/charger_blue_fire.png", Texture.class);
@@ -63,7 +69,7 @@ public class Assets {
 		Texture camoEnemyTexture = assetManager.get("enemies/mushroom_camo.png", Texture.class);
 		camoEnemySprite = new TextureRegion(camoEnemyTexture);
 
-		Texture towerTexture = assetManager.get("towers/charger_blue_sprite.png", Texture.class);
+		Texture towerTexture = assetManager.get("towers/Charger_Blue_Sprite.png", Texture.class);
 		towerSprite = new TextureRegion(towerTexture);
 
 		Texture spikeFactoryTexture = assetManager.get("towers/spike_factory_base.png", Texture.class);
@@ -76,6 +82,8 @@ public class Assets {
 		thornSpikeFactorySprite = new TextureRegion(thornSpikeFactoryTexture);
 
 		enemyHitSound = assetManager.get("sfx/oof.mp3", Sound.class);
+
+		assetsLoaded = true;
 	}
 
 	/**
