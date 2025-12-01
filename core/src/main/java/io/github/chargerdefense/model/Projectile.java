@@ -77,7 +77,7 @@ public class Projectile {
      *         it should continue
      */
     public boolean update(float deltaTime) {
-        if (target.isDead()) {
+        if (target != null && target.isDead()) {
             isDestroyed = true;
         }
 
