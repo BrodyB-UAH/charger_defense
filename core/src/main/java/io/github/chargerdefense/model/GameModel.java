@@ -11,6 +11,7 @@ import io.github.chargerdefense.model.map.GameMap;
 import io.github.chargerdefense.model.unit.upgrade.Upgrade;
 import io.github.chargerdefense.model.unit.Unit;
 import io.github.chargerdefense.model.unit.basic.BasicUnit;
+import io.github.chargerdefense.model.unit.spike.SpikeFactoryUnit;
 
 /**
  * Manages the main game loop, game state, and core components.
@@ -73,6 +74,14 @@ public class GameModel implements PlayerObserver {
             Unit unit = createUnitFromSerializedType(savedUnit.type);
             if (unit != null) {
                 this.map.placeUnit(unit, savedUnit.x, savedUnit.y);
+                if (unit.getUpgradePath() != null && savedUnit.upgradeLevel > 0) {
+                    unit.getUpgradePath().setCurrentLevel(savedUnit.upgradeLevel);
+                    for (int i = 0; i < savedUnit.upgradeLevel; i++) {
+                        if (i < unit.getUpgradePath().getUpgrades().size()) {
+                            unit.getUpgradePath().getUpgrades().get(i).apply(unit);
+                        }
+                    }
+                }
             }
         }
 
@@ -94,6 +103,8 @@ public class GameModel implements PlayerObserver {
         switch (unitType) {
             case "BasicUnit":
                 return new BasicUnit();
+            case "SpikeFactoryUnit":
+                return new SpikeFactoryUnit();
             default:
                 return null;
         }

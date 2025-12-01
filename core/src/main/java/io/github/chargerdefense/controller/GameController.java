@@ -160,14 +160,19 @@ public class GameController extends InputAdapter {
     public void returnToMainMenu() {
         UserProfile activeProfile = profileManager.getActiveProfile();
         if (activeProfile != null) {
+            // adjust saved round index based on whether a round is in progress
+            // when a round starts, it increments the round index, so we need to
+            // subtract 1 if the round is not in progress, and 2 if it is in progress
+            int adjust = game.getRoundManager().isRoundInProgress() ? 0 : 1;
             SavedGameState savedGame = new SavedGameState(
                     game.getLives(), game.getPlayer().getCurrency(), game.getPlayer().getScore(),
                     game.getPlayer().getEnemiesDefeated(), game.getPlayer().getUnitsPurchased(),
-                    game.getRoundManager().getCurrentRoundNumber() - 2, // adjust for 0-based index
+                    game.getRoundManager().getCurrentRoundNumber() - 2 + adjust, // adjust for 0-based index
                     new ArrayList<>());
             for (Unit unit : game.getMap().getPlacedUnits()) {
+                int upgradeLevel = unit.getUpgradePath() != null ? unit.getUpgradePath().getCurrentLevel() : 0;
                 SavedUnit savedUnit = new SavedUnit(
-                        unit.getClass().getSimpleName(), unit.getPosition().x, unit.getPosition().y);
+                        unit.getClass().getSimpleName(), unit.getPosition().x, unit.getPosition().y, upgradeLevel);
                 savedGame.placedUnits.add(savedUnit);
             }
 

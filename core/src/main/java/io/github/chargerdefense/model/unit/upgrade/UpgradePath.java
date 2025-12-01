@@ -48,4 +48,25 @@ public class UpgradePath {
     public int getCurrentLevel() {
         return currentLevel;
     }
+
+    /**
+     * Sets the current level of the upgrade path.
+     * Used when loading saved game state.
+     * 
+     * @param level The level to set
+     */
+    public void setCurrentLevel(int level) {
+        if (level >= 0 && level <= upgrades.size()) {
+            this.currentLevel = level;
+        }
+    }
+
+    /**
+     * Gets the list of all upgrades in this path.
+     * 
+     * @return The list of upgrades
+     */
+    public List<Upgrade> getUpgrades() {
+        return upgrades;
+    }
 }

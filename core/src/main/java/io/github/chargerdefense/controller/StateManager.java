@@ -2,6 +2,7 @@ package io.github.chargerdefense.controller;
 
 import com.badlogic.gdx.Game;
 
+import io.github.chargerdefense.assets.Assets;
 import io.github.chargerdefense.data.game.SavedGameState;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.MainMenuModel;
@@ -71,6 +72,11 @@ public class StateManager {
      * @param savedGame The saved game state to load, or null to start a new game.
      */
     public void startGame(GameMap map, SavedGameState savedGame) {
+        // ensure sprites are available
+        if (savedGame != null) {
+            Assets.getInstance().loadAssets();
+        }
+
         GameModel gameModel;
         if (savedGame != null) {
             gameModel = new GameModel(savedGame, map, generateRounds());
