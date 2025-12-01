@@ -10,6 +10,7 @@ import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.unit.Unit;
 import io.github.chargerdefense.model.unit.basic.BasicUnit;
 import io.github.chargerdefense.model.unit.spike.SpikeFactoryUnit;
+import io.github.chargerdefense.view.TutorialManager;
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -25,6 +26,8 @@ public class GameController extends InputAdapter {
     private final GameModel game;
     /** The user profile manager */
     private final ProfileManager profileManager;
+    /** The tutorial manager */
+    private TutorialManager tutorialManager;
     /** The currently selected unit type for placement, or null if none selected */
     private String selectedUnitType;
     /** The current mouse position in game coordinates */
@@ -93,6 +96,9 @@ public class GameController extends InputAdapter {
         for (Unit unit : game.getMap().getPlacedUnits()) {
             if (unit.contains(gameX, gameY)) {
                 game.setSelectedUnit(unit);
+                if (tutorialManager != null) {
+                    tutorialManager.onUnitSelected();
+                }
                 return true;
             }
         }
@@ -123,7 +129,20 @@ public class GameController extends InputAdapter {
      * @return true if the unit was successfully purchased and placed
      */
     public boolean purchaseUnit(Unit unit, int x, int y) {
-        return game.purchaseUnit(unit, x, y);
+        boolean success = game.purchaseUnit(unit, x, y);
+        if (success && tutorialManager != null) {
+            tutorialManager.onUnitPlaced();
+        }
+        return success;
+    }
+
+    /**
+     * Sets the tutorial manager for tutorial notifications.
+     *
+     * @param tutorialManager The tutorial manager
+     */
+    public void setTutorialManager(TutorialManager tutorialManager) {
+        this.tutorialManager = tutorialManager;
     }
 
     /**

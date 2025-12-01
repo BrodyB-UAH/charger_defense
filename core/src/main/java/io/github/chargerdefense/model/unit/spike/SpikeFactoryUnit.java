@@ -1,8 +1,11 @@
 package io.github.chargerdefense.model.unit.spike;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import io.github.chargerdefense.GameConstants;
+import io.github.chargerdefense.assets.Assets;
 import io.github.chargerdefense.model.Path;
 import io.github.chargerdefense.model.Projectile;
 import io.github.chargerdefense.model.SpikeProjectile;
@@ -46,6 +49,14 @@ public class SpikeFactoryUnit extends Unit {
 		upgrades.add(new IncreaseSpikeLifetimeUpgrade(75, 5.0));
 		upgrades.add(new IncreaseSpikeMaxHitsUpgrade(100, 2));
 		this.upgradePath = new UpgradePath(upgrades);
+	}
+
+	@Override
+	protected void loadSprite() {
+		TextureRegion sprite = Assets.getInstance().getSpikeFactorySprite();
+		if (sprite != null) {
+			setSprite(sprite);
+		}
 	}
 
 	@Override
@@ -124,29 +135,23 @@ public class SpikeFactoryUnit extends Unit {
 	}
 
 	@Override
-	public void render(ShapeRenderer shapeRenderer) {
+	public void renderOverlay(ShapeRenderer shapeRenderer) {
 		Point position = getPosition();
 		if (position == null) {
 			return;
 		}
 
-		float size = 16.0f;
-
-		// range indicator
+		// draw range indicator
 		shapeRenderer.setColor(0.4f, 0.3f, 0.2f, 0.2f);
 		shapeRenderer.circle(position.x, position.y, (float) getRange());
+
+		float size = GameConstants.TOWER_SIZE;
 
 		// selection highlight
 		if (isSelected()) {
 			shapeRenderer.setColor(Color.YELLOW);
-			shapeRenderer.rect(position.x - size / 2 - 2, position.y - size / 2 - 2, size + 4, size + 4);
+			shapeRenderer.rect(position.x - size / 2, position.y - size / 2, size, size);
 		}
-
-		shapeRenderer.setColor(Color.GRAY);
-		shapeRenderer.rect(position.x - size / 2, position.y - size / 2, size, size);
-
-		shapeRenderer.setColor(Color.DARK_GRAY);
-		shapeRenderer.rect(position.x - size / 4, position.y - size / 4, size / 2, size / 2);
 	}
 
 	/**

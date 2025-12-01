@@ -38,7 +38,8 @@ public abstract class Unit {
         }
 
         /**
-         * Cycles to the next targeting mode in order: FIRST -> LAST -> CLOSEST -> FIRST...
+         * Cycles to the next targeting mode in order: FIRST -> LAST -> CLOSEST ->
+         * FIRST...
          */
         public TargetingMode next() {
             switch (this) {
@@ -76,6 +77,8 @@ public abstract class Unit {
     private TargetingMode targetMode = TargetingMode.FIRST;
     /** The sprite texture for rendering the unit. */
     private TextureRegion sprite;
+    /** Whether the unit can detect camouflaged enemies. */
+    private boolean canDetectCamo = false;
 
     /**
      * Constructs a Unit.
@@ -91,6 +94,16 @@ public abstract class Unit {
         this.fireRate = fireRate;
         this.cost = cost;
         this.cooldown = 0;
+        loadSprite();
+    }
+
+    /**
+     * Loads the sprite for this unit from the Assets singleton.
+     * Subclasses can override to load different sprites.
+     */
+    protected void loadSprite() {
+        // Default implementation - does nothing
+        // Subclasses should override to set their specific sprite
     }
 
     /**
@@ -121,13 +134,14 @@ public abstract class Unit {
     }
 
     /**
-     * Finds the best valid enemy in range based on the current targeting mode and sets it as the target.
+     * Finds the best valid enemy in range based on the current targeting mode and
+     * sets it as the target.
      *
      * @param enemies The list of potential targets.
      */
     private void findNewTarget(List<Enemy> enemies) {
         currentTarget = null;
-        
+
         if (enemies.isEmpty()) {
             return;
         }
@@ -233,7 +247,7 @@ public abstract class Unit {
      * @return true if the enemy is within range, false otherwise
      */
     private boolean canSeeEnemy(Enemy enemy, double distanceSq) {
-        return isInRange(enemy, distanceSq) && !enemy.isCamouflaged();
+        return isInRange(enemy, distanceSq) && (canDetectCamo || !enemy.isCamouflaged());
     }
 
     /**
@@ -299,7 +313,8 @@ public abstract class Unit {
     }
 
     /**
-     * Renders the unit overlays (range circle, selection indicator, targeting line).
+     * Renders the unit overlays (range circle, selection indicator, targeting
+     * line).
      *
      * @param shapeRenderer The shape renderer to use for drawing
      */
@@ -387,7 +402,9 @@ public abstract class Unit {
         float size = GameConstants.TOWER_SIZE;
         return (x >= position.x - size / 2 && x <= position.x + size / 2 &&
                 y >= position.y - size / 2 && y <= position.y + size / 2);
-    }    /**
+    }
+
+    /**
      * Sets the damage dealt by the unit.
      * 
      * @param damage The new damage value
@@ -456,5 +473,23 @@ public abstract class Unit {
      */
     public TextureRegion getSprite() {
         return sprite;
+    }
+
+    /**
+     * Sets whether the unit can detect camouflaged enemies.
+     *
+     * @param canDetectCamo true to enable camo detection, false to disable
+     */
+    public void setCanDetectCamo(boolean canDetectCamo) {
+        this.canDetectCamo = canDetectCamo;
+    }
+
+    /**
+     * Checks if the unit can detect camouflaged enemies.
+     *
+     * @return true if the unit can detect camo, false otherwise
+     */
+    public boolean canDetectCamo() {
+        return canDetectCamo;
     }
 }

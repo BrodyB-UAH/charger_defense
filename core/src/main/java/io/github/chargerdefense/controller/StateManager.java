@@ -6,6 +6,7 @@ import io.github.chargerdefense.data.game.SavedGameState;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.MainMenuModel;
 import io.github.chargerdefense.model.Round;
+import io.github.chargerdefense.model.enemy.CamoEnemy;
 import io.github.chargerdefense.model.enemy.NormalEnemy;
 import io.github.chargerdefense.model.map.GameMap;
 import io.github.chargerdefense.view.GameView;
@@ -53,10 +54,12 @@ public class StateManager {
         return new ArrayList<>(
                 List.of(
                         new Round(List.of(
-                                new NormalEnemy(), new NormalEnemy(), new NormalEnemy())),
-                        new Round(List.of(
                                 new NormalEnemy(), new NormalEnemy(), new NormalEnemy(), new NormalEnemy(),
-                                new NormalEnemy(), new NormalEnemy())))
+                                new NormalEnemy())),
+                        new Round(List.of(
+                                new CamoEnemy(), new CamoEnemy(), new CamoEnemy(), new CamoEnemy())),
+                        new Round(List.of(new CamoEnemy(), new NormalEnemy(), new CamoEnemy(), new NormalEnemy(),
+                                new CamoEnemy(), new NormalEnemy(), new CamoEnemy(), new NormalEnemy())))
 
         );
     }
@@ -72,7 +75,7 @@ public class StateManager {
         if (savedGame != null) {
             gameModel = new GameModel(savedGame, map, generateRounds());
         } else {
-            gameModel = new GameModel(10, 100, map, generateRounds());
+            gameModel = new GameModel(3, 250, map, generateRounds());
         }
 
         this.gameController = new GameController(this, gameModel, mainMenuModel.getProfileManager());

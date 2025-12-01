@@ -170,6 +170,15 @@ public class GameModel implements PlayerObserver {
     }
 
     /**
+     * Notifies all observers that a unit was upgraded.
+     */
+    private void notifyUnitUpgraded() {
+        for (GameObserver observer : observers) {
+            observer.onUnitUpgraded();
+        }
+    }
+
+    /**
      * Updates the game state.
      * This method is called on each frame of the game loop.
      *
@@ -332,6 +341,8 @@ public class GameModel implements PlayerObserver {
 
     /**
      * Sets the number of lives.
+     * 
+     * Observers are notified of the change.
      *
      * @param lives The new number of lives
      */
@@ -370,6 +381,8 @@ public class GameModel implements PlayerObserver {
     /**
      * Gets the currently selected unit.
      * 
+     * The selected unit shows available upgrades and targeting options
+     * 
      * @return The selected unit, or null if none is selected
      */
     public Unit getSelectedUnit() {
@@ -378,6 +391,8 @@ public class GameModel implements PlayerObserver {
 
     /**
      * Sets the currently selected unit.
+     * 
+     * The selected unit shows available upgrades and targeting options
      * 
      * @param unit The unit to select, or null to clear selection
      */
@@ -399,6 +414,7 @@ public class GameModel implements PlayerObserver {
             if (nextUpgrade != null && player.canAfford(nextUpgrade.getCost())) {
                 player.spendCurrency(nextUpgrade.getCost());
                 selectedUnit.applyUpgrade();
+                notifyUnitUpgraded();
             }
         }
     }

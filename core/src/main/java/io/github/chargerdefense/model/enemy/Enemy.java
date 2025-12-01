@@ -59,6 +59,16 @@ public abstract class Enemy {
         this.speed = speed;
         this.currencyValue = currencyValue;
         this.pathIndex = 0;
+        loadSprite();
+    }
+
+    /**
+     * Loads the sprite for this enemy from the Assets singleton.
+     * Subclasses can override to load different sprites.
+     */
+    protected void loadSprite() {
+        // Default implementation - does nothing
+        // Subclasses should override to set their specific sprite
     }
 
     /**
@@ -118,7 +128,8 @@ public abstract class Enemy {
     }
 
     /**
-     * Checks for collisions with stationary projectiles (like spikes) and takes damage.
+     * Checks for collisions with stationary projectiles (like spikes) and takes
+     * damage.
      * Should be called after movement to check if the enemy walked over any spikes.
      *
      * @param projectiles The list of active projectiles to check
@@ -252,6 +263,15 @@ public abstract class Enemy {
     }
 
     /**
+     * Gets the sprite currently assigned to this enemy.
+     *
+     * @return The TextureRegion sprite or null if none set
+     */
+    public TextureRegion getSprite() {
+        return sprite;
+    }
+
+    /**
      * Checks if the enemy is camouflaged.
      *
      * @return true if the enemy is camouflaged, false otherwise
@@ -261,18 +281,17 @@ public abstract class Enemy {
     }
 
     /**
-     * Renders the enemy as a colored circle with a health bar.
-     *
-     * @param shapeRenderer The shape renderer to use for drawing
-     */
-    /**
      * Renders the enemy sprite.
      *
      * @param batch The SpriteBatch for drawing the sprite
      */
     public void renderSprite(SpriteBatch batch) {
-        if (position == null || isDead) {
+        if (position == null) {
             return;
+        }
+
+        if (sprite == null) {
+            loadSprite();
         }
 
         // Draw sprite
@@ -311,7 +330,7 @@ public abstract class Enemy {
     /**
      * Renders the enemy sprite and health bar (legacy method for compatibility).
      *
-     * @param batch The SpriteBatch for drawing the sprite
+     * @param batch         The SpriteBatch for drawing the sprite
      * @param shapeRenderer The ShapeRenderer for drawing the health bar
      */
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {

@@ -1,5 +1,6 @@
 package io.github.chargerdefense.model.unit.spike;
 
+import io.github.chargerdefense.assets.Assets;
 import io.github.chargerdefense.model.unit.Unit;
 import io.github.chargerdefense.model.unit.upgrade.Upgrade;
 
@@ -43,6 +44,7 @@ public class IncreaseSpikeLifetimeUpgrade implements Upgrade {
 		if (unit instanceof SpikeFactoryUnit) {
 			SpikeFactoryUnit factory = (SpikeFactoryUnit) unit;
 			factory.setSpikeLifetime(factory.getSpikeLifetime() + lifetimeIncrease);
+			factory.setSprite(Assets.getInstance().getThornSpikeFactorySprite());
 		}
 	}
 }

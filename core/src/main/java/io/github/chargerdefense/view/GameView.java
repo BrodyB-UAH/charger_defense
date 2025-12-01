@@ -3,12 +3,9 @@ package io.github.chargerdefense.view;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -16,13 +13,13 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.badlogic.gdx.InputMultiplexer;
 
 import io.github.chargerdefense.GameConstants;
+import io.github.chargerdefense.assets.Assets;
 import io.github.chargerdefense.controller.GameController;
 import io.github.chargerdefense.controller.StateManager;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.Projectile;
 import io.github.chargerdefense.model.enemy.Enemy;
 import io.github.chargerdefense.model.unit.Unit;
-import io.github.chargerdefense.model.unit.basic.BasicUnit;
 
 import java.util.List;
 
@@ -46,12 +43,6 @@ public class GameView implements Screen {
     private final OrthographicCamera camera;
     /** The viewport for handling screen resizing with proper aspect ratio */
     private final Viewport viewport;
-    /** The asset manager for loading game assets */
-    private final AssetManager assetManager;
-    /** The sprite texture for enemies */
-    private TextureRegion enemySprite;
-    /** The sprite texture for basic tower units */
-    private TextureRegion towerSprite;
 
     /**
      * Constructs a new GameView with the specified state manager and game model.
@@ -65,13 +56,12 @@ public class GameView implements Screen {
         this.shapeRenderer = new ShapeRenderer();
         this.controller = gameManager.getGameController();
         this.hud = new GameHUD(game, controller);
-        this.assetManager = new AssetManager();
 
         // for scaling
         this.camera = new OrthographicCamera();
         this.camera.setToOrtho(false, GameConstants.GAME_WIDTH, GameConstants.GAME_HEIGHT);
         this.viewport = new FitViewport(GameConstants.GAME_WIDTH, GameConstants.GAME_HEIGHT, camera);
-        
+
         // Load assets
         loadAssets();
     }
@@ -80,27 +70,7 @@ public class GameView implements Screen {
      * Loads all game assets including textures and sprites.
      */
     private void loadAssets() {
-        assetManager.load("enemies/mushroom_black.png", Texture.class);
-        assetManager.load("towers/charger_blue_sprite.png", Texture.class);
-        assetManager.finishLoading();
-        
-        Texture enemyTexture = assetManager.get("enemies/mushroom_black.png", Texture.class);
-        this.enemySprite = new TextureRegion(enemyTexture);
-        
-        Texture towerTexture = assetManager.get("towers/charger_blue_sprite.png", Texture.class);
-        this.towerSprite = new TextureRegion(towerTexture);
-        
-        // Apply sprite to all enemies
-        game.getRoundManager().setEnemySprite(enemySprite);
-        
-        // Set default sprite for BasicUnit class so future instances get it
-        BasicUnit.setDefaultSprite(towerSprite);
-        // Apply sprite to already placed BasicUnit instances only
-        for (Unit unit : game.getMap().getPlacedUnits()) {
-            if (unit instanceof BasicUnit) {
-                unit.setSprite(towerSprite);
-            }
-        }
+        Assets.getInstance().loadAssets();
     }
 
     /**
@@ -109,6 +79,9 @@ public class GameView implements Screen {
      */
     @Override
     public void show() {
+        // Set tutorial manager in controller so it can notify on unit placement
+        controller.setTutorialManager(hud.getTutorialManager());
+
         InputMultiplexer multiplexer = new InputMultiplexer();
         multiplexer.addProcessor(hud.getStage());
 
@@ -185,7 +158,8 @@ public class GameView implements Screen {
             enemy.renderSprite(batch);
         }
 
-        // Draw placement preview sprite (if any) here so we can use SpriteBatch tint/alpha
+        // Draw placement preview sprite (if any) here so we can use SpriteBatch
+        // tint/alpha
         Unit previewUnit = controller.getPreviewUnit();
         if (previewUnit != null && controller.getSelectedUnitType() != null) {
             java.awt.Point.Float mousePos = controller.getMousePosition();
@@ -194,14 +168,11 @@ public class GameView implements Screen {
 
             boolean isValid = game.getMap().isPlacementValid((int) gameX, (int) gameY);
 
-            if (previewUnit instanceof BasicUnit && towerSprite != null) {
-                // Use the shared tower size constant for preview
-                float previewSize = io.github.chargerdefense.GameConstants.TOWER_SIZE;
-                float alpha = isValid ? 0.8f : 0.5f;
-                batch.setColor(1f, 1f, 1f, alpha);
-                batch.draw(towerSprite, gameX - previewSize / 2, gameY - previewSize / 2, previewSize, previewSize);
-                batch.setColor(1f, 1f, 1f, 1f);
-            }
+            float alpha = isValid ? 0.8f : 0.5f;
+            batch.setColor(1f, 1f, 1f, alpha);
+            previewUnit.setPosition(new java.awt.Point((int) gameX, (int) gameY));
+            previewUnit.renderSprite(batch);
+            batch.setColor(1f, 1f, 1f, 1f);
         }
         batch.end();
 

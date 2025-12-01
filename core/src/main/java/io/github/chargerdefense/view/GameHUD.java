@@ -47,6 +47,12 @@ public class GameHUD implements GameObserver {
 	/** The upgrade menu view for displaying unit upgrade options */
 	private final UpgradeMenuView upgradeMenuView;
 
+	/** The tutorial manager for displaying tutorial hints */
+	private final TutorialManager tutorialManager;
+
+	/** The game over display for showing victory/defeat messages */
+	private final GameOverDisplay gameOverDisplay;
+
 	/**
 	 * Constructs a new GameHUD with the specified game model and controller.
 	 *
@@ -59,6 +65,8 @@ public class GameHUD implements GameObserver {
 		this.stage = new Stage(new ScreenViewport());
 		this.skin = new Skin(Gdx.files.internal("uiskin.json"));
 		this.upgradeMenuView = new UpgradeMenuView(gameModel, skin);
+		this.tutorialManager = new TutorialManager(stage, skin);
+		this.gameOverDisplay = new GameOverDisplay(stage, skin);
 		initializeUI();
 
 		gameModel.addObserver(this);
@@ -103,6 +111,7 @@ public class GameHUD implements GameObserver {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
 				controller.startNextRound();
+				tutorialManager.onRoundStarted();
 			}
 		});
 		topTable.add(startRoundButton).padRight(10);
@@ -158,7 +167,7 @@ public class GameHUD implements GameObserver {
 	}
 
 	/**
-	 * Adds a unit button to the shop panel.
+	 * Adds a unit button to the shop panel, allowing the user to purchase a unit.
 	 *
 	 * @param name        The name of the unit
 	 * @param cost        The cost of the unit
@@ -195,6 +204,9 @@ public class GameHUD implements GameObserver {
 
 	/**
 	 * Toggles the visibility of the unit shop panel.
+	 * 
+	 * When opened, it also notifies the tutorial manager to indicate that the user
+	 * has followed a tutorial hint.
 	 */
 	private void toggleShopPanel() {
 		shopPanelVisible = !shopPanelVisible;
@@ -205,6 +217,7 @@ public class GameHUD implements GameObserver {
 			toggleShopButton.setText("<");
 			toggleShopButton.setPosition(Gdx.graphics.getWidth() - unitShopPanel.getWidth() - 30,
 					Gdx.graphics.getHeight() / 2);
+			tutorialManager.onShopOpened();
 		} else {
 			// slide out to the right
 			unitShopPanel.setPosition(Gdx.graphics.getWidth(), 0);
@@ -249,18 +262,29 @@ public class GameHUD implements GameObserver {
 			startRoundButton.setText("In Progress...");
 		} else {
 			startRoundButton.setText("Start Round");
+			// Notify tutorial when first round completes (round 1 just finished, not in
+			// progress anymore)
+			if (gameModel.getRoundManager().getCurrentRoundNumber() == 1) {
+				tutorialManager.onFirstRoundCompleted();
+			}
 		}
 	}
 
 	@Override
 	public void onGameOver(boolean victory) {
-		// TODO display modal
 		startRoundButton.setDisabled(true);
 		if (victory) {
 			startRoundButton.setText("Victory!");
+			gameOverDisplay.showVictory();
 		} else {
 			startRoundButton.setText("Game Over");
+			gameOverDisplay.showDefeat();
 		}
+	}
+
+	@Override
+	public void onUnitUpgraded() {
+		tutorialManager.onUnitUpgraded();
 	}
 
 	/**
@@ -298,6 +322,15 @@ public class GameHUD implements GameObserver {
 	 */
 	public Stage getStage() {
 		return stage;
+	}
+
+	/**
+	 * Gets the tutorial manager.
+	 *
+	 * @return The tutorial manager
+	 */
+	public TutorialManager getTutorialManager() {
+		return tutorialManager;
 	}
 
 	/**
