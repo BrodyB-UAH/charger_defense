@@ -1,10 +1,12 @@
 package io.github.chargerdefense.model.enemy;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import io.github.chargerdefense.assets.Assets;
 import io.github.chargerdefense.model.GameModel;
 import io.github.chargerdefense.model.Path;
 import io.github.chargerdefense.model.Projectile;
@@ -153,6 +155,11 @@ public abstract class Enemy {
      * @param damage The amount of damage to inflict.
      */
     public void takeDamage(double damage) {
+        Sound hitSound = Assets.getInstance().getEnemyHitSound();
+        if (hitSound != null) {
+            hitSound.play();
+        }
+
         this.health -= damage;
         if (this.health <= 0 && !isDead) {
             isDead = true;

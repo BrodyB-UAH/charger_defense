@@ -1,6 +1,7 @@
 package io.github.chargerdefense.assets;
 
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
@@ -19,6 +20,9 @@ public class Assets {
 	private TextureRegion spikeFactorySprite;
 	private TextureRegion camoTowerSprite;
 	private TextureRegion thornSpikeFactorySprite;
+
+	// Cached sounds
+	private Sound enemyHitSound;
 
 	/**
 	 * Private constructor for singleton pattern.
@@ -50,6 +54,7 @@ public class Assets {
 		assetManager.load("towers/spike_factory_base.png", Texture.class);
 		assetManager.load("towers/spike_factory_thorn.png", Texture.class);
 		assetManager.load("towers/charger_blue_fire.png", Texture.class);
+		assetManager.load("sfx/oof.mp3", Sound.class);
 		assetManager.finishLoading();
 
 		Texture enemyTexture = assetManager.get("enemies/mushroom_black.png", Texture.class);
@@ -69,6 +74,8 @@ public class Assets {
 
 		Texture thornSpikeFactoryTexture = assetManager.get("towers/spike_factory_thorn.png", Texture.class);
 		thornSpikeFactorySprite = new TextureRegion(thornSpikeFactoryTexture);
+
+		enemyHitSound = assetManager.get("sfx/oof.mp3", Sound.class);
 	}
 
 	/**
@@ -123,6 +130,15 @@ public class Assets {
 	 */
 	public TextureRegion getThornSpikeFactorySprite() {
 		return thornSpikeFactorySprite;
+	}
+
+	/**
+	 * Gets the enemy hit sound.
+	 *
+	 * @return The enemy hit sound
+	 */
+	public Sound getEnemyHitSound() {
+		return enemyHitSound;
 	}
 
 	/**
