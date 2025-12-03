@@ -16,8 +16,8 @@ public class IncreaseSpikeLifetimeUpgrade implements Upgrade {
 	/**
 	 * Constructs the upgrade with the specified cost and lifetime increase.
 	 * 
-	 * @param cost
-	 * @param lifetimeIncrease
+	 * @param cost             the cost of the upgrade
+	 * @param lifetimeIncrease the amount to increase spike lifetime by
 	 */
 	public IncreaseSpikeLifetimeUpgrade(int cost, double lifetimeIncrease) {
 		this.cost = cost;

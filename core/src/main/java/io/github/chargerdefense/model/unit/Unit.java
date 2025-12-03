@@ -23,16 +23,30 @@ public abstract class Unit {
      * Enum representing targeting priority modes for the unit.
      */
     public enum TargetingMode {
+        /** Targets the enemy furthest along the path */
         FIRST("First"),
+        /** Targets the enemy nearest the start of the path */
         LAST("Last"),
+        /** Targets the enemy physically closest to the tower */
         CLOSEST("Closest");
 
+        /** The display name of the targeting mode */
         private final String displayName;
 
+        /**
+         * Constructs a TargetingMode with the specified display name.
+         *
+         * @param displayName The display name for the targeting mode.
+         */
         TargetingMode(String displayName) {
             this.displayName = displayName;
         }
 
+        /**
+         * Gets the display name of the targeting mode.
+         *
+         * @return The display name.
+         */
         public String getDisplayName() {
             return displayName;
         }
@@ -40,6 +54,8 @@ public abstract class Unit {
         /**
          * Cycles to the next targeting mode in order: FIRST -> LAST -> CLOSEST ->
          * FIRST...
+         * 
+         * @return The next TargetingMode in sequence
          */
         public TargetingMode next() {
             switch (this) {

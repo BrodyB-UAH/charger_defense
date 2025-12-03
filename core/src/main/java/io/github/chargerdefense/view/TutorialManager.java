@@ -28,17 +28,32 @@ public class TutorialManager {
 	 * Enumeration of tutorial steps in sequence.
 	 */
 	public enum TutorialStep {
+		/** Step to prompt placing the first unit */
 		PLACE_FIRST_UNIT("Click the '>' button to open the unit shop, then place your first unit!"),
+		/** Step to prompt starting the first round */
 		START_ROUND("Great! Now click 'Start Round' to begin the first wave of enemies."),
+		/** Step to prompt upgrading a unit */
 		UPGRADE_UNIT("Excellent! Click on a unit to select it, then upgrade it to make it stronger."),
+		/** Tutorial completed */
 		COMPLETED("");
 
+		/** The message associated with the tutorial step */
 		private final String message;
 
+		/**
+		 * Constructs a TutorialStep with the specified message.
+		 *
+		 * @param message The message for the tutorial step.
+		 */
 		TutorialStep(String message) {
 			this.message = message;
 		}
 
+		/**
+		 * Gets the message for the tutorial step.
+		 *
+		 * @return The tutorial step message.
+		 */
 		public String getMessage() {
 			return message;
 		}
